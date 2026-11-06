@@ -76,7 +76,7 @@ async function bootstrap() {
   );
 
   const port = config.get<number>('PORT', 7000);
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   logger.log(`Server đang chạy tại http://localhost:${port}/${globalPrefix}`);
   logger.log(`Swagger tại http://localhost:${port}/${globalPrefix}/docs`);
 }
