@@ -75,6 +75,10 @@ async function bootstrap() {
     SwaggerModule.createDocument(app, swaggerConfig),
   );
 
+  express.get('/', (_req: Request, res: Response) => {
+    res.redirect(302, `/${globalPrefix}/docs`);
+  });
+
   const port = config.get<number>('PORT', 7000);
   await app.listen(port, '0.0.0.0');
   logger.log(`Server đang chạy tại http://localhost:${port}/${globalPrefix}`);
