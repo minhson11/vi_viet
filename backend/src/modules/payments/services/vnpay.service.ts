@@ -75,17 +75,18 @@ export class VnpayService {
 
   private get defaultReturnUrl(): string {
     const directReturn = this.configService.get<string>('VNPAY_RETURN_URL');
-    if (directReturn && directReturn.trim().length > 0) {
+    if (directReturn && directReturn.trim().length > 0 && !directReturn.includes('ngrok')) {
       return directReturn.trim();
     }
-    const publicUrl =
-      this.configService.get<string>('PUBLIC_API_URL') ||
-      this.configService.get<string>('NGROK_URL');
-    if (publicUrl && publicUrl.trim().length > 0) {
+    const renderUrl = this.configService.get<string>('RENDER_EXTERNAL_URL');
+    if (renderUrl && renderUrl.trim().length > 0) {
+      return `${renderUrl.trim().replace(/\/+$/, '')}/api/v1/payments/vnpay/return`;
+    }
+    const publicUrl = this.configService.get<string>('PUBLIC_API_URL');
+    if (publicUrl && publicUrl.trim().length > 0 && !publicUrl.includes('ngrok')) {
       return `${publicUrl.trim().replace(/\/+$/, '')}/api/v1/payments/vnpay/return`;
     }
-    const port = this.configService.get<string>('PORT') || '7000';
-    return `http://localhost:${port}/api/v1/payments/vnpay/return`;
+    return 'https://vi-viet.onrender.com/api/v1/payments/vnpay/return';
   }
 
   /**

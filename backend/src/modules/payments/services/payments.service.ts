@@ -412,9 +412,16 @@ export class PaymentsService {
       orderCode = payment?.orders?.order_code || '';
     }
 
-    const frontendBaseUrl =
+    let frontendBaseUrl =
       this.configService.get<string>('FRONTEND_PAYMENT_RESULT_URL') ||
-      'http://localhost:3000/thanh-toan/ket-qua';
+      'https://vi-viet-1whr.vercel.app/thanh-toan/ket-qua';
+
+    if (
+      this.configService.get<string>('NODE_ENV') === 'production' &&
+      frontendBaseUrl.includes('localhost')
+    ) {
+      frontendBaseUrl = 'https://vi-viet-1whr.vercel.app/thanh-toan/ket-qua';
+    }
 
     const statusParam = isSuccess ? 'success' : 'failed';
 
