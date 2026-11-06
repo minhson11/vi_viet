@@ -47,8 +47,29 @@ async function bootstrap() {
   const corsOrigins = config
     .get<string>('CORS_ORIGIN', 'http://localhost:3000,http://localhost:5173')
     .split(',')
-    .map((origin) => origin.trim());
-  app.enableCors({ origin: corsOrigins, credentials: true });
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  app.enableCors({
+    origin: (requestOrigin, callback) => {
+      if (!requestOrigin) return callback(null, true);
+      try {
+        const url = new URL(requestOrigin);
+        const isVercel =
+          url.hostname.endsWith('.vercel.app') || url.hostname === 'vercel.app';
+        const isLocalhost =
+          url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+        const isConfigured = corsOrigins.includes(requestOrigin);
+        if (isConfigured || isVercel || isLocalhost) {
+          return callback(null, true);
+        }
+      } catch {
+        // invalid URL
+      }
+      return callback(null, false);
+    },
+    credentials: true,
+  });
   configureApp(app, config);
 
   const globalPrefix = config.get<string>('API_PREFIX', 'api/v1');
