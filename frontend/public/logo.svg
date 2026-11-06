@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 95" fill="none">
+  <defs>
+    <!-- Liquid Amber Gold Gradient -->
+    <linearGradient id="vietGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="30%" stop-color="#F59E0B" />
+      <stop offset="70%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+
+    <!-- Royal Lacquer Red Gradient -->
+    <linearGradient id="lacquerRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B72E24" />
+      <stop offset="60%" stop-color="#931A13" />
+      <stop offset="100%" stop-color="#6E0F0A" />
+    </linearGradient>
+
+    <!-- Ceramic Celadon Glow -->
+    <filter id="culinaryGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#D97706" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- ================= AUTHENTIC VIETNAMESE CULINARY EMBLEM ================= -->
+  <!-- Chiếc Bát Men Cung Đình, Đôi Đũa Vàng & Khói Hương Ba Miền -->
+  <g transform="translate(10, 8)" filter="url(#culinaryGlow)">
+    <!-- Vòng Nguyệt Quế / Đĩa Khảm Men Khép Kín Tối Giản -->
+    <circle cx="38" cy="40" r="34" stroke="url(#vietGold)" stroke-width="1.2" stroke-dasharray="140 10 30 10" opacity="0.65" />
+    <circle cx="38" cy="40" r="37.5" stroke="url(#vietGold)" stroke-width="0.6" stroke-dasharray="2 4" opacity="0.4" />
+
+    <!-- Bông Lúa Hạt Ngọc Trời (Bên Trái) -->
+    <path d="M 14,56 C 12,42 16,28 25,18" fill="none" stroke="url(#vietGold)" stroke-width="1.2" stroke-linecap="round" />
+    <!-- Hạt lúa vàng óng -->
+    <ellipse cx="14" cy="48" rx="2.5" ry="4.5" transform="rotate(-30 14 48)" fill="url(#vietGold)" />
+    <ellipse cx="16" cy="38" rx="2.5" ry="4.5" transform="rotate(-20 16 38)" fill="url(#vietGold)" />
+    <ellipse cx="20" cy="28" rx="2.4" ry="4.2" transform="rotate(-10 20 28)" fill="url(#vietGold)" />
+    <ellipse cx="26" cy="20" rx="2.2" ry="3.8" transform="rotate(5 26 20)" fill="url(#vietGold)" />
+
+    <!-- Chiếc Thố / Bát Sứ Ẩm Thực (Fine-Dining Heritage Bowl) -->
+    <!-- Thân bát tròn đầy -->
+    <path d="M 21,43 C 21,62 55,62 55,43 Z" fill="url(#lacquerRed)" />
+    <path d="M 21,43 C 21,62 55,62 55,43" fill="none" stroke="url(#vietGold)" stroke-width="1.8" stroke-linecap="round" />
+    <!-- Vành miệng bát ngọc mạ vàng -->
+    <ellipse cx="38" cy="43" rx="17" ry="4.5" fill="#201713" stroke="url(#vietGold)" stroke-width="1.5" />
+    <!-- Chân đế thố -->
+    <path d="M 31,62 L 45,62" stroke="url(#vietGold)" stroke-width="2.2" stroke-linecap="round" />
+
+    <!-- Đôi Đũa Hoàng Gia Khảm Vàng (Slender Golden Chopsticks) -->
+    <!-- Đũa 1 gác chéo thanh thoát -->
+    <line x1="22" y1="48" x2="63" y2="28" stroke="url(#vietGold)" stroke-width="2" stroke-linecap="round" />
+    <!-- Đũa 2 song song nhẹ -->
+    <line x1="25" y1="52" x2="66" y2="32" stroke="url(#vietGold)" stroke-width="1.8" stroke-linecap="round" />
+    <!-- Mũi đũa bọc bạc/ngọc -->
+    <circle cx="22" cy="48" r="1.2" fill="#FFFFFF" />
+    <circle cx="25" cy="52" r="1.2" fill="#FFFFFF" />
+
+    <!-- 3 Làn Khói Hương Vị Đa Giác Quan (Top, Heart, Base Aroma Steam) -->
+    <!-- Làn khói 1: Thảo quả khói trầm -->
+    <path d="M 33,39 C 30,31 36,25 33,16" fill="none" stroke="url(#vietGold)" stroke-width="1.2" stroke-linecap="round" opacity="0.8" />
+    <!-- Làn khói 2: Trung tâm bay cao -->
+    <path d="M 38,38 C 42,28 35,21 39,11" fill="none" stroke="url(#vietGold)" stroke-width="1.6" stroke-linecap="round" opacity="0.95" />
+    <!-- Làn khói 3: Hậu vị hồi quế -->
+    <path d="M 43,40 C 46,33 41,26 44,18" fill="none" stroke="url(#vietGold)" stroke-width="1.2" stroke-linecap="round" opacity="0.75" />
+
+    <!-- Hạt Ngọc Châu Đỉnh Khói (Tinh Hoa Vị Giác) -->
+    <circle cx="39" cy="8.5" r="2.2" fill="url(#vietGold)" />
+  </g>
+
+  <!-- ================= BẢN SẮC TYPOGRAPHY ẨM THỰC ================= -->
+  <!-- Tên thương hiệu: VỊ VIỆT -->
+  <text x="96" y="47" font-family="'Playfair Display', Georgia, serif" font-size="36" font-weight="800" letter-spacing="4" fill="url(#lacquerRed)">
+    VỊ VIỆT
+  </text>
+
+  <!-- Hạt ngọc dưới dấu chấm Vị & Việt -->
+  <circle cx="127" cy="54" r="2.2" fill="url(#vietGold)" />
+  <circle cx="187" cy="54" r="2.2" fill="url(#vietGold)" />
+
+  <!-- Dải phân cách chỉ vàng hoàng kim -->
+  <line x1="97" y1="59" x2="350" y2="59" stroke="url(#vietGold)" stroke-width="0.9" opacity="0.7" />
+
+  <!-- Phụ đề: ẨM THỰC ĐƯƠNG ĐẠI -->
+  <text x="98" y="72" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="9.5" font-weight="700" letter-spacing="3.8" fill="url(#vietGold)">
+    ẨM THỰC ĐƯƠNG ĐẠI
+  </text>
+
+  <!-- Tagline: BẢN GIAO HƯỞNG VỊ GIÁC ĐẤT VIỆT -->
+  <text x="98" y="84" font-family="'Playfair Display', Georgia, serif" font-size="9" font-style="italic" letter-spacing="1.2" fill="#6B5E57">
+    Bản Giao Hưởng Vị Giác Đất Việt
+  </text>
+</svg>

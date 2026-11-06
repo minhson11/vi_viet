@@ -1,0 +1,29 @@
+:root {
+  --color-brand-red: #b72e24;
+  --color-brand-red-hover: #98241c;
+  --color-brand-red-light: #fdf2f0;
+
+  --color-cream: #fff3dc;
+  --color-cream-light: #fffaee;
+
+  --color-ink: #201713;
+  --color-ink-muted: #6b5e57;
+  --color-ink-light: #9f9189;
+
+  --color-herb: #405b42;
+  --color-herb-light: #ebf1ec;
+
+  --color-turmeric: #e6ad36;
+  --color-turmeric-light: #fdf6e7;
+
+  --color-surface: #ffffff;
+  --color-surface-hover: #f9f6f0;
+  --color-background: #fdfbf7;
+  --color-border: #e8dfd3;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
