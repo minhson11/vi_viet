@@ -117,20 +117,24 @@ export class ReviewsService {
       );
     }
 
+    const rawContent = (dto.content ?? dto.comment ?? '').trim();
+    const cleanContent = rawContent.length > 0 ? rawContent : null;
+    const cleanImages = Array.isArray(dto.images) ? dto.images : [];
+
     // Upsert đánh giá theo order_item_id (chống tạo 2 đánh giá trên cùng dòng món)
     const review = await this.prisma.reviews.upsert({
       where: { order_item_id: oiId },
       update: {
         rating: dto.rating,
-        content: dto.content !== undefined ? dto.content : null,
-        images: dto.images !== undefined ? dto.images : undefined,
+        content: cleanContent,
+        images: cleanImages,
         visibility: reviews_visibility.VISIBLE,
       },
       create: {
         order_item_id: oiId,
         rating: dto.rating,
-        content: dto.content || null,
-        images: dto.images || [],
+        content: cleanContent,
+        images: cleanImages,
         visibility: reviews_visibility.VISIBLE,
       },
       include: {
@@ -147,18 +151,21 @@ export class ReviewsService {
     return this.serializeReviewPublic(review);
   }
 
-  // 2. Khách vãng lai / Public xem danh sách đánh giá của một món ăn (API-25)
-  async getDishReviews(dishId: string, page = 1, limit = 20) {
-    const dId = BigInt(dishId);
-    const skip = (page - 1) * limit;
-
-    const dish = await this.prisma.dishes.findUnique({
-      where: { id: dId },
+  // 2. Khách vãng lai / Public xem danh sách đánh giá của một món ăn (API-25, hỗ trợ cả ID số nguyên lẫn Slug món)
+  async getDishReviews(dishIdOrSlug: string, page = 1, limit = 20) {
+    const isNumeric = /^\d+$/.test(dishIdOrSlug);
+    const dish = await this.prisma.dishes.findFirst({
+      where: isNumeric
+        ? { OR: [{ id: BigInt(dishIdOrSlug) }, { slug: dishIdOrSlug }] }
+        : { slug: dishIdOrSlug },
     });
 
     if (!dish) {
-      throw new NotFoundException(`Không tìm thấy món ăn ID ${dishId}.`);
+      throw new NotFoundException(`Không tìm thấy món ăn "${dishIdOrSlug}".`);
     }
+
+    const dId = dish.id;
+    const skip = (page - 1) * limit;
 
     const where: Prisma.reviewsWhereInput = {
       order_items: { dish_id: dId },

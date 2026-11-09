@@ -25,6 +25,11 @@ export class SubmitReviewDto {
   content?: string;
 
   @IsOptional()
+  @IsString({ message: 'Nội dung nhận xét phải là chuỗi' })
+  @MaxLength(2000, { message: 'Nội dung nhận xét tối đa 2000 ký tự' })
+  comment?: string;
+
+  @IsOptional()
   @IsArray({ message: 'Danh sách ảnh phải là mảng chuỗi' })
   @ArrayMaxSize(5, { message: 'Tối đa 5 ảnh cho mỗi đánh giá' })
   @IsString({ each: true, message: 'Mỗi đường dẫn ảnh phải là chuỗi' })

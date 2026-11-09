@@ -40,9 +40,10 @@ export function useDishData(slug: string) {
             })
             .catch(() => {});
 
-          // 2. Nạp đánh giá thực khách
+          // 2. Nạp đánh giá thực khách (hỗ trợ cả ID lẫn Slug)
+          const dishIdentifier = full.id || full.slug || slug;
           reviewsApi
-            .getDishReviews(full.id)
+            .getDishReviews(dishIdentifier)
             .then((r) => {
               if (isMounted) setReviews(r.items || []);
             })

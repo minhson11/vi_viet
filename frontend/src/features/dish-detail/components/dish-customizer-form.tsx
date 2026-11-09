@@ -64,11 +64,19 @@ export function DishCustomizerForm({
           </span>
 
           {reviewsCount > 0 && (
-            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById("dish-tabs-section");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100/80 transition-colors border border-amber-200 text-amber-800 text-[11px] font-bold cursor-pointer"
+              title="Bấm để xem các nhận xét của thực khách"
+            >
               <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
               <span>5.0</span>
               <span className="text-amber-700 font-normal">({reviewsCount} đánh giá)</span>
-            </div>
+            </button>
           )}
         </div>
 

@@ -68,38 +68,78 @@ export function OrderItemsList({
 
               {/* KHỐI ĐÁNH GIÁ MÓN KHI ĐƠN HOÀN TẤT */}
               {isCompleted && (
-                <div className="pt-2 border-t border-border/50 flex items-center justify-between">
-                  {it.review ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-0.5 text-amber-500">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3.5 h-3.5 ${
-                              i < (it.review?.rating || 5)
-                                ? "fill-amber-400 text-amber-400"
-                                : "text-border"
-                            }`}
-                          />
-                        ))}
+                <div className="pt-2 border-t border-border/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    {it.review ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-0.5 text-amber-500">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${
+                                i < (it.review?.rating || 5)
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-border"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[11px] font-semibold text-emerald-700">
+                          Bạn đã đánh giá {it.review.rating} sao
+                        </span>
                       </div>
-                      <span className="text-[11px] font-semibold text-emerald-700">
-                        Bạn đã đánh giá {it.review.rating} sao
+                    ) : (
+                      <span className="text-[11px] text-ink-muted italic">
+                        Bạn đã thưởng thức món này như thế nào?
                       </span>
-                    </div>
-                  ) : (
-                    <span className="text-[11px] text-ink-muted italic">
-                      Bạn đã thưởng thức món này như thế nào?
-                    </span>
-                  )}
+                    )}
 
-                  <button
-                    onClick={() => onOpenReviewModal(it)}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-red hover:underline cursor-pointer ml-auto"
-                  >
-                    <Star className="w-3.5 h-3.5 fill-brand-red text-brand-red" />
-                    <span>{it.review ? "Chỉnh sửa đánh giá" : "Đánh giá món này"}</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => onOpenReviewModal(it)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-red hover:underline cursor-pointer ml-auto"
+                    >
+                      <Star className="w-3.5 h-3.5 fill-brand-red text-brand-red" />
+                      <span>{it.review ? "Chỉnh sửa đánh giá" : "Đánh giá món này"}</span>
+                    </button>
+                  </div>
+
+                  {/* Hiển thị nội dung nhận xét & ảnh thực khách đã đăng */}
+                  {it.review && (it.review.content || (it.review.images && it.review.images.length > 0)) && (
+                    <div className="p-2.5 rounded-lg bg-surface-hover/60 border border-border/70 text-xs space-y-1.5 animate-in fade-in duration-200">
+                      {it.review.content && (
+                        <p className="text-ink leading-relaxed italic">
+                          &ldquo;{it.review.content}&rdquo;
+                        </p>
+                      )}
+                      {it.review.images && it.review.images.length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                          {it.review.images.map((imgUrl, imgIdx) => (
+                            <a
+                              key={imgIdx}
+                              href={imgUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="relative w-12 h-12 rounded-lg overflow-hidden border border-border hover:opacity-85 transition-opacity"
+                              title="Xem ảnh phóng to"
+                            >
+                              <img
+                                src={imgUrl}
+                                alt={`Ảnh đánh giá ${imgIdx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                      {it.review.reply && (
+                        <div className="mt-1.5 pt-1.5 border-t border-border/50 text-[11px] text-primary">
+                          <span className="font-bold">Phản hồi từ Bếp Vị Việt:</span>{" "}
+                          <span className="text-ink-muted">{it.review.reply}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

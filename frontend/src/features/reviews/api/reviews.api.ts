@@ -26,6 +26,7 @@ export const reviewsApi = {
     dto: {
       rating: number;
       content?: string;
+      comment?: string;
       images?: string[];
     }
   ): Promise<ReviewItem> {

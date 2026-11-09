@@ -7,7 +7,7 @@ import { ReviewItem } from "@/features/reviews/api/reviews.api";
 
 const GENERAL_TASTING_NOTES = [
   "Thưởng thức ngay sau khi nhận món để cảm nhận trọn vẹn hương vị và độ tươi ngon nhất.",
-  "Dùng kèm các phần nước chấm, đồ chua và rau thơm được Bếp Mẹ chuẩn bị đồng bộ theo từng món.",
+  "Dùng kèm các phần nước chấm, đồ chua và rau thơm được Bếp Vị Việt chuẩn bị đồng bộ theo từng món.",
   "Bạn có thể ghi chú khẩu vị riêng (độ cay, gia vị, dị ứng) cho đầu bếp ngay tại phần dặn dò trước khi đặt món.",
 ];
 
@@ -20,7 +20,7 @@ export function DishStoryTabs({ dish, reviews }: DishStoryTabsProps) {
   const [activeTab, setActiveTab] = useState<"story" | "ingredients" | "reviews">("story");
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
+    <div id="dish-tabs-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
       <div className="border-t border-border/70 pt-10">
         {/* Navigation Thanh Tab */}
         <div className="flex items-center gap-3 sm:gap-6 border-b border-border/80 pb-4 overflow-x-auto no-scrollbar">
@@ -194,9 +194,15 @@ export function DishStoryTabs({ dish, reviews }: DishStoryTabsProps) {
                         </div>
                       </div>
 
-                      <p className="text-xs text-ink leading-relaxed">
-                        {rev.comment || rev.content || "Món ăn rất vừa miệng, giao nóng hổi và đóng gói cực kỳ chỉn chu!"}
-                      </p>
+                      {rev.comment || rev.content ? (
+                        <p className="text-xs text-ink leading-relaxed">
+                          {rev.comment || rev.content}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-ink-muted italic">
+                          (Thực khách đã chấm {rev.rating} sao và không để lại bình luận văn bản)
+                        </p>
+                      )}
 
                       {/* Ảnh thực tế của món ăn do khách hàng chụp */}
                       {rev.images && rev.images.length > 0 && (
@@ -220,12 +226,12 @@ export function DishStoryTabs({ dish, reviews }: DishStoryTabsProps) {
                         </div>
                       )}
 
-                      {/* Phản hồi từ Bếp Mẹ Vị Việt nếu có */}
+                      {/* Phản hồi từ Bếp Vị Việt nếu có */}
                       {rev.reply && (
                         <div className="mt-2.5 p-3 rounded-xl bg-surface-warm/60 border border-primary/20 text-xs space-y-1">
                           <span className="font-bold text-primary flex items-center gap-1.5 text-[11px]">
                             <Sparkles className="w-3 h-3 text-gold" />
-                            Phản hồi từ Nhà Hàng Vị Việt:
+                            Phản hồi từ Bếp Vị Việt:
                           </span>
                           <p className="text-ink-muted text-[11px] leading-relaxed">
                             {rev.reply}

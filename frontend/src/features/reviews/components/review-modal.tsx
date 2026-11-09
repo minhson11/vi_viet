@@ -43,9 +43,22 @@ export function ReviewModal({ isOpen, onClose, orderItem, onSuccess }: ReviewMod
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastInitializedIdRef = useRef<string | null>(null);
+  const wasOpenRef = useRef<boolean>(false);
 
+  // Khởi tạo form chỉ khi modal mở ra hoặc khi chuyển sang món khác.
+  // Tránh việc component cha re-render (do polling 12s hoặc countdown) tự động xóa trắng form người dùng đang nhập.
   useEffect(() => {
-    if (orderItem) {
+    if (!isOpen || !orderItem) {
+      wasOpenRef.current = false;
+      return;
+    }
+
+    const isNewItem = lastInitializedIdRef.current !== orderItem.id;
+    if (!wasOpenRef.current || isNewItem) {
+      wasOpenRef.current = true;
+      lastInitializedIdRef.current = orderItem.id;
+
       if (orderItem.review) {
         setRating(orderItem.review.rating || 5);
         setContent(orderItem.review.content || "");
@@ -58,7 +71,8 @@ export function ReviewModal({ isOpen, onClose, orderItem, onSuccess }: ReviewMod
       setErrorMsg(null);
       setSuccessMsg(null);
     }
-  }, [orderItem]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, orderItem?.id, orderItem?.review?.id]);
 
   if (!orderItem) return null;
 
@@ -93,8 +107,16 @@ export function ReviewModal({ isOpen, onClose, orderItem, onSuccess }: ReviewMod
 
       try {
         const res = await reviewsApi.uploadReviewImage(file);
-        if (res && res.url) {
-          uploadedUrls.push(res.url);
+        const uploadedUrl =
+          (res as any)?.url ||
+          (res as any)?.data?.url ||
+          (res as any)?.secure_url ||
+          (typeof res === "string" ? res : null);
+
+        if (uploadedUrl) {
+          uploadedUrls.push(uploadedUrl);
+        } else {
+          console.warn("Upload trả về cấu trúc không có url:", res);
         }
       } catch (err: any) {
         console.error("Lỗi tải ảnh:", err);
@@ -102,7 +124,9 @@ export function ReviewModal({ isOpen, onClose, orderItem, onSuccess }: ReviewMod
       }
     }
 
-    setImages((prev) => [...prev, ...uploadedUrls]);
+    if (uploadedUrls.length > 0) {
+      setImages((prev) => [...prev, ...uploadedUrls]);
+    }
     setIsUploading(false);
 
     // Reset input để chọn lại file nếu muốn
@@ -126,9 +150,10 @@ export function ReviewModal({ isOpen, onClose, orderItem, onSuccess }: ReviewMod
     setErrorMsg(null);
 
     try {
+      const cleanContent = content.trim();
       await reviewsApi.submitReview(orderItem.id, {
         rating,
-        content: content.trim() || undefined,
+        content: cleanContent || undefined,
         images,
       });
 
@@ -136,7 +161,7 @@ export function ReviewModal({ isOpen, onClose, orderItem, onSuccess }: ReviewMod
       setTimeout(() => {
         onSuccess();
         onClose();
-      }, 900);
+      }, 700);
     } catch (err: any) {
       console.error("Submit review error:", err);
       setErrorMsg(err.message || "Không thể lưu đánh giá. Vui lòng thử lại.");
