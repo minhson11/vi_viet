@@ -120,30 +120,48 @@ export class FirebaseIdentityService {
       // ignore
     }
 
-    const candidatePaths = [
-      cleanedCred,
-      cleanedCred ? path.resolve(process.cwd(), cleanedCred) : '',
-      cleanedCred ? path.resolve(process.cwd(), 'backend', cleanedCred) : '',
-      path.resolve(process.cwd(), 'secrets/firebase-service-account.json'),
-      path.resolve(process.cwd(), 'backend/secrets/firebase-service-account.json'),
-      currentDir ? path.resolve(currentDir, '../../../../secrets/firebase-service-account.json') : '',
-      currentDir ? path.resolve(currentDir, '../../../../../secrets/firebase-service-account.json') : '',
-    ].filter(Boolean);
-
     let credentialObj: any = null;
-    for (const p of candidatePaths) {
+
+    // 1. Kiểm tra nếu GOOGLE_APPLICATION_CREDENTIALS chứa chuỗi JSON trực tiếp
+    if (cleanedCred.startsWith('{') && cleanedCred.endsWith('}')) {
       try {
-        if (p && fs.existsSync(p)) {
-          const raw = fs.readFileSync(p, 'utf8');
-          const json = JSON.parse(raw);
-          if (json.project_id && json.private_key) {
-            this.logger.log(`Firebase Admin loaded service account from: ${p}`);
-            credentialObj = cert(json);
-            break;
-          }
+        const json = JSON.parse(cleanedCred);
+        if (json.project_id && json.private_key) {
+          this.logger.log('Firebase Admin loaded service account directly from environment JSON string');
+          credentialObj = cert(json);
         }
       } catch {
-        // thử tiếp đường dẫn khác
+        // bỏ qua nếu parse lỗi
+      }
+    }
+
+    // 2. Quét file từ các đường dẫn khả dĩ (local dev, repo, Render Secret Files)
+    if (!credentialObj) {
+      const candidatePaths = [
+        cleanedCred,
+        cleanedCred ? path.resolve(process.cwd(), cleanedCred) : '',
+        cleanedCred ? path.resolve(process.cwd(), 'backend', cleanedCred) : '',
+        '/etc/secrets/firebase-service-account.json', // Đường dẫn Render Secret File
+        path.resolve(process.cwd(), 'secrets/firebase-service-account.json'),
+        path.resolve(process.cwd(), 'backend/secrets/firebase-service-account.json'),
+        currentDir ? path.resolve(currentDir, '../../../../secrets/firebase-service-account.json') : '',
+        currentDir ? path.resolve(currentDir, '../../../../../secrets/firebase-service-account.json') : '',
+      ].filter(Boolean);
+
+      for (const p of candidatePaths) {
+        try {
+          if (p && fs.existsSync(p)) {
+            const raw = fs.readFileSync(p, 'utf8');
+            const json = JSON.parse(raw);
+            if (json.project_id && json.private_key) {
+              this.logger.log(`Firebase Admin loaded service account from: ${p}`);
+              credentialObj = cert(json);
+              break;
+            }
+          }
+        } catch {
+          // thử tiếp đường dẫn khác
+        }
       }
     }
 
