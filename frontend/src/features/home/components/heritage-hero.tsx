@@ -52,12 +52,13 @@ export const HeritageHero: React.FC = () => {
           >
             Xem Thực Đơn Hôm Nay
           </a>
-          <a
-            href="/tu-van"
-            className="px-7 py-4 rounded-full bg-[#fdeae3] hover:bg-white text-primary border border-primary/30 text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
+            className="px-7 py-4 rounded-full bg-[#fdeae3] hover:bg-white text-primary border border-primary/30 text-xs font-bold uppercase tracking-wider shadow-sm transition-all cursor-pointer"
           >
-            Tư Vấn Khẩu Vị AI
-          </a>
+            Bếp Trưởng Tư Vấn
+          </button>
         </div>
 
         {/* Thống kê di sản bên dưới */}

@@ -17,7 +17,6 @@ import {
   Building,
   AlertTriangle,
   QrCode,
-  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,41 +27,9 @@ import {
   PaymentTransaction,
   RefundItem,
 } from "@/features/admin-payments/api/admin-payments.api";
+import { extractBankInfo, generateVietQRUrl } from "@/lib/utils/vietqr";
 
 type RefundWithPayment = RefundItem & { payment: PaymentTransaction };
-
-function extractBankInfo(reasonStr: string) {
-  if (!reasonStr || !reasonStr.includes("[Hoàn tiền STK]")) return null;
-  const parts = reasonStr.replace("[Hoàn tiền STK]", "").split("|");
-  const getVal = (prefix: string) => {
-    const found = parts.find((p) => p.toLowerCase().includes(prefix.toLowerCase()));
-    return found ? found.split(":")[1]?.trim() : "";
-  };
-  return {
-    bank: getVal("Ngân hàng") || "Chưa rõ",
-    accountNumber: getVal("STK") || "",
-    accountName: getVal("Chủ TK") || "",
-    note: getVal("Lý do") || "",
-  };
-}
-
-function getBankCode(bankName: string): string {
-  const b = bankName.toUpperCase();
-  if (b.includes("MB")) return "MB";
-  if (b.includes("VIETCOM") || b.includes("VCB")) return "VCB";
-  if (b.includes("TECHCOM") || b.includes("TCB")) return "TCB";
-  if (b.includes("VPBANK") || b.includes("VPB")) return "VPB";
-  if (b.includes("VIETIN") || b.includes("CTG") || b.includes("ICB")) return "ICB";
-  if (b.includes("BIDV")) return "BIDV";
-  if (b.includes("ACB")) return "ACB";
-  if (b.includes("TPBANK") || b.includes("TPB")) return "TPB";
-  if (b.includes("SACOM") || b.includes("STB")) return "STB";
-  if (b.includes("VIB")) return "VIB";
-  if (b.includes("HDB")) return "HDB";
-  if (b.includes("TIMO")) return "TIMO";
-  if (b.includes("CAKE")) return "CAKE";
-  return "MB";
-}
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<PaymentTransaction[]>([]);
@@ -663,7 +630,13 @@ export default function AdminPaymentsPage() {
             String(manualRefundTarget.payment.order_id);
           const vietQrUrl =
             bankInfo && bankInfo.accountNumber
-              ? `https://img.vietqr.io/image/${getBankCode(bankInfo.bank)}-${bankInfo.accountNumber}-compact2.png?amount=${manualRefundTarget.amount}&addInfo=${encodeURIComponent(`Hoan tien don ${orderCode}`)}&accountName=${encodeURIComponent(bankInfo.accountName)}`
+              ? generateVietQRUrl({
+                  bankName: bankInfo.bank,
+                  accountNumber: bankInfo.accountNumber,
+                  accountName: bankInfo.accountName,
+                  amount: Number(manualRefundTarget.amount),
+                  description: `Hoan tien don ${orderCode}`,
+                })
               : null;
 
           return (

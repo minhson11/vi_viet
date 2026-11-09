@@ -22,6 +22,8 @@ export interface OrderItemOption {
 
 export interface OrderItem {
   id: string;
+  dish_id?: string;
+  variant_id?: string;
   dish_name: string;
   variant_name?: string;
   quantity: number;
@@ -31,6 +33,14 @@ export interface OrderItem {
   line_total?: number;
   note?: string;
   options?: OrderItemOption[];
+  review?: {
+    id: string;
+    rating: number;
+    content: string | null;
+    images?: string[];
+    reply?: string | null;
+    created_at: string;
+  } | null;
 }
 
 export interface OrderEvent {

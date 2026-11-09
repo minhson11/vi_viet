@@ -19,7 +19,6 @@ import {
   Settings,
   LayoutDashboard,
   LogOut,
-  Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -52,13 +51,23 @@ export const AdminSidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-surface border-r border-border flex flex-col h-screen sticky top-0 shrink-0">
       {/* Brand Header */}
-      <div className="h-16 px-5 border-b border-border flex items-center gap-3">
-        <img src="/logo-icon.png" alt="Vị Việt" className="w-9 h-9 object-contain" />
+      <Link
+        href="/"
+        title="Xem trang bán hàng Vị Việt"
+        className="h-16 px-5 border-b border-border flex items-center gap-3 group hover:bg-surface-hover/50 transition-colors"
+      >
+        <img
+          src="/logo-emblem.svg"
+          alt="Vị Việt"
+          className="w-9 h-9 object-contain group-hover:scale-105 transition-transform"
+        />
         <div className="flex flex-col">
-          <span className="font-bold text-sm tracking-wide text-ink">VỊ VIỆT ADMIN</span>
-          <span className="text-[11px] text-ink-muted">Hệ thống quản trị & vận hành</span>
+          <span className="font-bold text-sm tracking-wide text-brand-red font-headline">
+            VỊ VIỆT ADMIN
+          </span>
+          <span className="text-[10px] text-ink-muted">Hệ thống quản trị & vận hành</span>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation List */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -89,22 +98,14 @@ export const AdminSidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* AI Assistant Banner / Footer */}
+      {/* Sidebar Footer: Nút Đăng xuất duy nhất */}
       <div className="p-3 border-t border-border">
-        <div className="p-3 bg-cream/60 border border-turmeric/30 rounded-lg mb-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-ink">
-            <Sparkles className="w-4 h-4 text-turmeric shrink-0" />
-            <span>AI Bếp Mẹ Trợ Lý</span>
-          </div>
-          <p className="text-[11px] text-ink-muted mt-1">Đề xuất thực đơn & gợi ý tự động hoạt động 24/7</p>
-        </div>
-
         <button
           onClick={logout}
-          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
         >
           <LogOut className="w-4 h-4 shrink-0" />
-          <span>Đăng xuất</span>
+          <span>Đăng xuất hệ thống</span>
         </button>
       </div>
     </aside>

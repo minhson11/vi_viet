@@ -31,7 +31,7 @@ export const DishTagsEditor: React.FC<DishTagsEditorProps> = ({
           <span>Gắn nhãn & Thẻ phân loại</span>
         </h3>
         <p className="text-xs text-ink-muted">
-          Giúp thuật toán gợi ý của AI Bếp Mẹ và bộ lọc tìm kiếm của khách hàng chính xác hơn.
+          Giúp thuật toán gợi ý món ăn và bộ lọc tìm kiếm của khách hàng chính xác hơn.
         </p>
       </div>
 

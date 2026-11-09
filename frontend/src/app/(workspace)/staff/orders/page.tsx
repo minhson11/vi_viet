@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { formatVND } from "@/lib/utils/currency";
 import { ordersApi, Order } from "@/features/orders/api/orders.api";
+import { useAudioNotification } from "@/lib/hooks/use-audio-notification";
 
 export default function StaffOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -42,6 +43,7 @@ export default function StaffOrdersPage() {
   // Auto refresh & sound notification
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const { playChime } = useAudioNotification();
   const prevPendingCountRef = useRef(0);
 
   const loadOrders = useCallback(async (isSilent = false) => {
@@ -60,23 +62,8 @@ export default function StaffOrdersPage() {
       ).length;
 
       if (pendingCount > prevPendingCountRef.current && prevPendingCountRef.current > 0) {
-        if (soundEnabled && typeof window !== "undefined") {
-          try {
-            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
-            gain.gain.setValueAtTime(0.2, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.4);
-          } catch {
-            // Ignore sound errors
-          }
+        if (soundEnabled) {
+          playChime();
         }
       }
       prevPendingCountRef.current = pendingCount;
@@ -85,7 +72,7 @@ export default function StaffOrdersPage() {
     } finally {
       if (!isSilent) setIsLoading(false);
     }
-  }, [filter, searchTerm, soundEnabled]);
+  }, [filter, searchTerm, soundEnabled, playChime]);
 
   useEffect(() => {
     loadOrders();
@@ -476,46 +463,54 @@ export default function StaffOrdersPage() {
                       </div>
                     )}
 
-                    {/* Items preview */}
+                    {/* Items preview - Danh sách món to rõ cho nhân viên điều phối */}
                     {ord.items && ord.items.length > 0 && (
-                      <div className="pt-2 border-t border-border/50 text-[11px] space-y-1 text-ink">
-                        {ord.items.slice(0, 3).map((it, idx) => (
-                          <div key={idx} className="flex justify-between items-center">
-                            <span className="line-clamp-1 font-medium">
-                              {it.quantity}x {it.dish_name}
-                              {it.variant_name ? ` (${it.variant_name})` : ""}
-                            </span>
-                            <span className="font-mono text-ink-muted shrink-0 ml-2">
-                              {formatVND(Number(it.line_total || it.subtotal || 0))}
-                            </span>
-                          </div>
-                        ))}
-                        {ord.items.length > 3 && (
-                          <span className="text-[10px] text-ink-muted italic block">
-                            + {ord.items.length - 3} món khác...
-                          </span>
-                        )}
+                      <div className="pt-2 border-t border-border/60 space-y-1.5">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">
+                          Món đã đặt ({ord.items.length} món):
+                        </p>
+                        <div className="space-y-1">
+                          {ord.items.map((it, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between items-center bg-[#fff8f6] px-2 py-1.5 rounded-lg border border-[#e2beba]/40 text-xs"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-xs text-white bg-brand-red font-mono font-black px-1.5 py-0.2 rounded shrink-0">
+                                  x{it.quantity}
+                                </span>
+                                <span className="font-bold text-ink truncate leading-tight">
+                                  {it.dish_name}
+                                  {it.variant_name ? ` (${it.variant_name})` : ""}
+                                </span>
+                              </div>
+                              <span className="font-mono text-xs font-semibold text-brand-red shrink-0 ml-2">
+                                {formatVND(Number(it.line_total || it.subtotal || 0))}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Card Footer & Operations */}
-                <div className="pt-3 border-t border-border space-y-2">
+                <div className="pt-3 border-t border-border space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-ink-muted block uppercase font-bold tracking-wider">
-                        Tổng tiền:
+                        Tổng thanh toán:
                       </span>
-                      <span className="font-bold text-sm text-brand-red font-mono">
+                      <span className="font-black text-base text-brand-red font-mono">
                         {formatVND(Number(ord.total_amount || 0))}
                       </span>
                     </div>
 
                     <Link href={`/staff/orders/${ord.id}`}>
-                      <Button variant="outline" size="sm" className="h-8 text-xs flex items-center gap-1">
+                      <Button variant="outline" size="sm" className="h-8 text-xs font-semibold flex items-center gap-1 cursor-pointer">
                         <span>Chi tiết</span>
-                        <ArrowRight className="w-3 h-3" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
                   </div>
@@ -528,19 +523,19 @@ export default function StaffOrdersPage() {
                         size="sm"
                         disabled={isTargetLoading}
                         onClick={() => handleConfirmOrder(ord.id, ord.order_code)}
-                        className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1 shadow-xs"
+                        className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer rounded-xl"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>{isTargetLoading ? "Đang xử lý..." : "Xác nhận đơn"}</span>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{isTargetLoading ? "Xử lý..." : "✓ Tiếp Nhận Đơn"}</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         disabled={isTargetLoading}
                         onClick={() => setCancelTargetOrder(ord)}
-                        className="h-8 text-xs text-red-600 border-red-200 hover:bg-red-50 font-medium flex items-center justify-center gap-1"
+                        className="h-9 text-xs text-red-600 border-red-200 hover:bg-red-50 font-bold flex items-center justify-center gap-1 cursor-pointer rounded-xl"
                       >
-                        <XCircle className="w-3.5 h-3.5" />
+                        <XCircle className="w-4 h-4" />
                         <span>Từ chối</span>
                       </Button>
                     </div>
@@ -548,14 +543,14 @@ export default function StaffOrdersPage() {
 
                   {ord.status === "CONFIRMED" && (
                     <Button
-                      variant="secondary"
+                      variant="primary"
                       size="sm"
                       disabled={isTargetLoading}
                       onClick={() => handleMoveToPreparing(ord.id, ord.order_code)}
-                      className="w-full h-8 text-xs font-semibold flex items-center justify-center gap-1.5"
+                      className="w-full h-9 text-xs font-bold bg-brand-red hover:bg-brand-red-hover text-white flex items-center justify-center gap-1.5 cursor-pointer rounded-xl shadow-xs"
                     >
-                      <ChefHat className="w-3.5 h-3.5 text-brand-red" />
-                      <span>Chuyển bếp nấu (PREPARING)</span>
+                      <ChefHat className="w-4 h-4 text-turmeric" />
+                      <span>🔥 Bếp Nhận Nấu (PREPARING)</span>
                     </Button>
                   )}
 
@@ -565,10 +560,10 @@ export default function StaffOrdersPage() {
                       size="sm"
                       disabled={isTargetLoading}
                       onClick={() => handleMoveToReady(ord.id, ord.order_code)}
-                      className="w-full h-8 text-xs font-semibold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center justify-center gap-1.5"
+                      className="w-full h-9 text-xs font-bold text-emerald-800 bg-emerald-50 border-emerald-300 hover:bg-emerald-100 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Báo nấu xong (READY)</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>✅ Báo Nấu Xong (READY)</span>
                     </Button>
                   )}
 
@@ -578,10 +573,10 @@ export default function StaffOrdersPage() {
                       size="sm"
                       disabled={isTargetLoading}
                       onClick={() => handleMoveToDelivering(ord.id, ord.order_code)}
-                      className="w-full h-8 text-xs font-semibold flex items-center justify-center gap-1.5"
+                      className="w-full h-9 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 cursor-pointer rounded-xl shadow-xs"
                     >
-                      <Truck className="w-3.5 h-3.5" />
-                      <span>Bàn giao giao hàng (DELIVERING)</span>
+                      <Truck className="w-4 h-4" />
+                      <span>🛵 Bàn Giao Shipper (DELIVERING)</span>
                     </Button>
                   )}
 
@@ -591,10 +586,10 @@ export default function StaffOrdersPage() {
                       size="sm"
                       disabled={isTargetLoading}
                       onClick={() => handleMoveToCompleted(ord.id, ord.order_code)}
-                      className="w-full h-8 text-xs font-semibold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center justify-center gap-1.5"
+                      className="w-full h-9 text-xs font-bold text-emerald-700 border-emerald-300 hover:bg-emerald-50 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Hoàn tất đơn (COMPLETED)</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>🎉 Đã Giao Cho Khách (COMPLETED)</span>
                     </Button>
                   )}
                 </div>

@@ -7,6 +7,7 @@ import { StorefrontHeader } from "@/components/layout/storefront-header";
 import { StorefrontFooter } from "@/components/layout/storefront-footer";
 import { User, MapPin, Heart, ShoppingBag, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useAuth } from "@/features/auth/context/auth-context";
 
 const accountNav = [
   { title: "Hồ sơ cá nhân", href: "/tai-khoan", icon: User },
@@ -22,6 +23,10 @@ export default function AccountLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  const displayName = user?.full_name || user?.email?.split("@")[0] || "Khách Hàng Thân Thiết";
+  const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -33,12 +38,12 @@ export default function AccountLayout({
           <aside className="md:col-span-3 space-y-4">
             <div className="bg-surface border border-border rounded-2xl p-5 shadow-xs">
               <div className="flex items-center gap-3 pb-4 border-b border-border">
-                <div className="w-12 h-12 rounded-full bg-brand-red text-cream flex items-center justify-center font-bold text-base">
-                  KH
+                <div className="w-12 h-12 rounded-full bg-brand-red text-cream flex items-center justify-center font-bold text-sm shadow-xs">
+                  {initials}
                 </div>
-                <div>
-                  <h3 className="font-bold text-sm text-ink">Khách Hàng Thân Thiết</h3>
-                  <span className="text-[11px] text-turmeric font-semibold">Hội viên Vị Việt</span>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-sm text-ink truncate">{displayName}</h3>
+                  <span className="text-[11px] text-turmeric font-semibold block">Hội viên Vị Việt</span>
                 </div>
               </div>
 

@@ -152,7 +152,7 @@ model coupon_redemptions {
   coupons         coupons                   @relation(fields: [coupon_id], references: [id], onUpdate: Restrict, map: "fk_coupon_redemptions_1")
   orders          orders                    @relation(fields: [order_id, user_id], references: [id, user_id], onUpdate: Restrict, map: "fk_coupon_redemptions_2")
 
-  @@unique([order_id, user_id], map: "fk_coupon_redemptions_2")
+  @@unique([order_id, user_id], map: "uq_coupon_redemptions_order_user")
   @@index([coupon_id, user_id, status], map: "ix_redemption_limit")
 }
 
@@ -508,6 +508,7 @@ model reviews {
   order_item_id     BigInt             @unique(map: "uq_review_item") @db.UnsignedBigInt
   rating            Int                @db.UnsignedTinyInt
   content           String?            @db.Text
+  images            Json?
   visibility        reviews_visibility @default(VISIBLE)
   moderation_reason String?            @db.VarChar(500)
   reply             String?            @db.Text

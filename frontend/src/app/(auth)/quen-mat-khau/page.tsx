@@ -4,14 +4,31 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { authApi } from "@/features/auth/api/auth.api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!email.trim() || isLoading) return;
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      await authApi.forgotPassword(email.trim());
+      setSubmitted(true);
+    } catch (err: any) {
+      setErrorMessage(
+        err?.message || "Không thể gửi yêu cầu khôi phục. Vui lòng thử lại sau.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -31,17 +48,24 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {errorMessage && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg">
+              {errorMessage}
+            </div>
+          )}
+
           <Input
             label="Địa chỉ Email"
             type="email"
             placeholder="tenban@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
             required
           />
 
-          <Button type="submit" variant="primary" size="md" className="w-full">
-            Gửi liên kết khôi phục
+          <Button type="submit" variant="primary" size="md" className="w-full" disabled={isLoading}>
+            {isLoading ? "Đang gửi liên kết..." : "Gửi liên kết khôi phục"}
           </Button>
 
           <p className="text-xs text-center text-ink-muted">

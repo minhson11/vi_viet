@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { StorefrontHeader } from "@/components/layout/storefront-header";
 import { StorefrontFooter } from "@/components/layout/storefront-footer";
 import { RequireLoginModal } from "@/components/auth/require-login-modal";
+import { FloatingAiConcierge } from "@/features/ai/components/floating-ai-concierge";
 
 export default function StorefrontLayout({
   children,
@@ -26,6 +27,9 @@ export default function StorefrontLayout({
       <main className={`flex-1 ${isHomePage ? "" : "pt-20"}`}>
         {children}
       </main>
+
+      {/* Chatbot AI Bếp Trưởng Vị Việt nổi góc dưới bên phải trên tất cả màn hình */}
+      <FloatingAiConcierge />
 
       <StorefrontFooter />
     </div>

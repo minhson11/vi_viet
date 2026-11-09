@@ -289,6 +289,28 @@ export default function AdminReviewsPage() {
                       {r.content || r.comment || "Khách hàng không để lại nhận xét bằng chữ."}
                     </p>
 
+                    {/* Ảnh thực tế khách hàng đính kèm */}
+                    {r.images && r.images.length > 0 && (
+                      <div className="flex items-center gap-2 pt-1 flex-wrap">
+                        {r.images.map((imgUrl, imgIdx) => (
+                          <a
+                            key={imgIdx}
+                            href={imgUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="relative w-16 h-16 rounded-lg overflow-hidden border border-border hover:opacity-85 transition-opacity shadow-2xs group"
+                            title="Bấm để xem ảnh gốc"
+                          >
+                            <img
+                              src={imgUrl}
+                              alt={`Ảnh đánh giá ${imgIdx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Phản hồi từ Quán nếu có */}
                     {r.reply && (
                       <div className="p-3 bg-cream/70 border border-turmeric/30 rounded-xl space-y-1">

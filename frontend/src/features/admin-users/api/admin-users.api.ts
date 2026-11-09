@@ -46,4 +46,58 @@ export const adminUsersApi = {
   ): Promise<AdminUserItem> {
     return httpClient.patch<AdminUserItem>(`/admin/users/${id}`, dto);
   },
+
+  async getCustomerDetail(id: string): Promise<CustomerDetail360> {
+    return httpClient.get<CustomerDetail360>(`/admin/customers/${id}`);
+  },
+
+  async getCustomerOrders(
+    id: string,
+    params?: { page?: number; limit?: number; status?: string }
+  ): Promise<{
+    items: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      total_pages: number;
+    };
+  }> {
+    return httpClient.get<any>(`/admin/customers/${id}/orders`, { params });
+  },
 };
+
+export interface CustomerDetail360 {
+  customer: AdminUserItem;
+  statistics: {
+    total_orders_count: number;
+    completed_orders_count: number;
+    lifetime_spend: number;
+    first_order_at: string | null;
+    last_order_at: string | null;
+  };
+  addresses: Array<{
+    id: string;
+    recipient_name: string;
+    phone: string;
+    address_line: string;
+    delivery_note: string | null;
+    is_default: boolean;
+    created_at: string;
+  }>;
+  preferences: {
+    spicy_level: number | null;
+    budget_per_meal: number;
+    dietary_note: string | null;
+    tag_preferences: Array<{
+      tag_id: string;
+      tag_name: string;
+      preference: string;
+    }>;
+    ingredient_restrictions: Array<{
+      ingredient_id: string;
+      ingredient_name: string;
+      reason: string;
+    }>;
+  } | null;
+}

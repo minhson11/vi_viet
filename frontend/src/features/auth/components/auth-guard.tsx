@@ -17,7 +17,7 @@ export const AdminGuard: React.FC<GuardProps> = ({ children }) => {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
-        router.push(`/dang-nhap?redirect=${encodeURIComponent(pathname)}`);
+        router.push(`/admin/dang-nhap?redirect=${encodeURIComponent(pathname)}`);
       } else if (user?.role !== "ADMIN") {
         router.push("/403?reason=admin_required");
       }
@@ -50,7 +50,7 @@ export const StaffGuard: React.FC<GuardProps> = ({ children }) => {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
-        router.push(`/dang-nhap?redirect=${encodeURIComponent(pathname)}`);
+        router.push(`/admin/dang-nhap?redirect=${encodeURIComponent(pathname)}`);
       } else if (!user?.role || !ALLOWED_STAFF_ROLES.includes(user.role)) {
         router.push("/403?reason=staff_required");
       }

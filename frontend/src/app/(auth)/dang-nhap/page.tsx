@@ -52,7 +52,7 @@ function LoginForm() {
           router.push("/tai-khoan");
         }
       } else {
-        router.push("/admin");
+        router.push("/tai-khoan");
       }
     } catch (err: any) {
       setError(err.message || "Email hoặc mật khẩu không chính xác.");
@@ -63,21 +63,25 @@ function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="text-center space-y-1">
-        <h1 className="text-xl font-bold text-ink">Đăng nhập tài khoản</h1>
+      <div className="text-center space-y-1 pb-1">
+        <h1 className="text-2xl font-bold font-headline text-ink tracking-tight">
+          Đăng nhập
+        </h1>
         <p className="text-xs text-ink-muted">
-          {redirectTarget ? "Vui lòng đăng nhập để tiếp tục truy cập trang này" : "Truy cập hệ thống quản trị & dịch vụ ẩm thực Vị Việt"}
+          {redirectTarget
+            ? "Vui lòng đăng nhập tài khoản để tiếp tục"
+            : "Chào mừng quý khách quay trở lại với Vị Việt"}
         </p>
       </div>
 
       {isRegistered && (
-        <div className="p-3 bg-green-50 border border-green-200 text-green-700 text-xs rounded-lg font-medium">
-          Đăng ký tài khoản thành công! Hãy đăng nhập để trải nghiệm ngay.
+        <div className="p-3 bg-green-50 border border-green-200 text-green-700 text-xs rounded-xl font-medium">
+          Đăng ký tài khoản thành công! Hãy đăng nhập để bắt đầu đặt tiệc ngay.
         </div>
       )}
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">
           {error}
         </div>
       )}
@@ -85,7 +89,7 @@ function LoginForm() {
       <Input
         label="Địa chỉ Email"
         type="email"
-        placeholder="admin@viviet.vn hoặc tenban@example.com"
+        placeholder="tenban@example.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
@@ -104,7 +108,7 @@ function LoginForm() {
         <label className="flex items-center gap-1.5 cursor-pointer select-none">
           <input
             type="checkbox"
-            className="rounded text-brand-red cursor-pointer"
+            className="rounded text-brand-red cursor-pointer accent-brand-red"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
           />
@@ -115,28 +119,37 @@ function LoginForm() {
         </Link>
       </div>
 
-      <Button type="submit" variant="primary" size="md" className="w-full" isLoading={isLoading}>
-        Đăng nhập
+      <Button type="submit" variant="primary" size="md" className="w-full h-11 text-xs uppercase font-bold tracking-wider" isLoading={isLoading}>
+        Đăng nhập ngay
       </Button>
 
+      {/* Đăng nhập nhanh bằng Mạng Xã Hội dành cho Khách hàng */}
       <SocialAuthButtons
         redirectTarget={redirectTarget}
         rememberMe={rememberMe}
       />
 
-      <p className="text-xs text-center text-ink-muted pt-2">
-        Chưa có tài khoản Vị Việt?{" "}
-        <Link href="/dang-ky" className="text-brand-red font-semibold hover:underline">
-          Đăng ký ngay
-        </Link>
-      </p>
+      <div className="pt-2 text-center text-xs border-t border-border/70">
+        <p className="text-ink-muted">
+          Chưa có tài khoản Vị Việt?{" "}
+          <Link href="/dang-ky" className="text-brand-red font-semibold hover:underline">
+            Đăng ký thành viên mới
+          </Link>
+        </p>
+      </div>
     </form>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="text-center text-xs text-ink-muted">Đang tải biểu mẫu...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-xs text-ink-muted">
+          Đang tải trang đăng nhập...
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

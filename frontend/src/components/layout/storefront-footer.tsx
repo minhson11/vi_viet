@@ -6,7 +6,7 @@ import { Phone, Mail, MapPin } from "lucide-react";
 
 export const StorefrontFooter: React.FC = () => {
   return (
-    <footer className="bg-[#1c1917] text-white border-t border-[#e2beba]/20 overflow-hidden">
+    <footer id="contact" className="bg-[#1c1917] text-white border-t border-[#e2beba]/20 overflow-hidden scroll-mt-20">
       {/* ================= LƯỚI THÔNG TIN CHÍNH (4 KHỐI) ================= */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10">
@@ -14,9 +14,9 @@ export const StorefrontFooter: React.FC = () => {
           <div className="lg:col-span-4 space-y-4">
             <Link href="/" className="inline-block group">
               <img
-                src="/logo.svg"
+                src="/logo-light.svg"
                 alt="Vị Việt - Contemporary Culinary"
-                className="h-12 w-auto object-contain"
+                className="h-12 w-auto object-contain group-hover:scale-105 transition-transform"
               />
             </Link>
             <p className="text-xs text-white/70 leading-relaxed pr-4 font-normal">
@@ -78,10 +78,14 @@ export const StorefrontFooter: React.FC = () => {
             </h4>
             <ul className="space-y-2 text-xs text-white/70">
               <li>
-                <Link href="/tu-van" className="hover:text-gold transition-colors flex items-center gap-1">
-                  <span>Tư vấn Khẩu vị AI</span>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
+                  className="hover:text-gold transition-colors flex items-center gap-1 cursor-pointer text-left"
+                >
+                  <span>Bếp Trưởng Tư Vấn</span>
                   <span className="text-[9px] bg-primary px-1.5 py-0.2 rounded-full text-white font-bold">Mới</span>
-                </Link>
+                </button>
               </li>
               <li>
                 <Link href="/gio-hang" className="hover:text-gold transition-colors">
@@ -99,8 +103,13 @@ export const StorefrontFooter: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/#story" className="hover:text-gold transition-colors">
-                  Hành trình di sản 3 miền
+                <Link href="/gioi-thieu" className="hover:text-gold transition-colors">
+                  Về Vị Việt &amp; Triết lý di sản
+                </Link>
+              </li>
+              <li>
+                <Link href="/lien-he" className="hover:text-gold transition-colors">
+                  Liên hệ &amp; Đặt bàn sự kiện
                 </Link>
               </li>
             </ul>

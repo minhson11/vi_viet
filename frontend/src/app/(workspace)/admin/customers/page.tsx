@@ -2,10 +2,33 @@
 
 import React, { useEffect, useState } from "react";
 import { AdminHeader } from "@/components/layout/admin-header";
-import { Users, Search, RefreshCw, Eye, Lock, Unlock, X, CheckCircle2, AlertCircle, Phone, Mail, Calendar, ShieldCheck } from "lucide-react";
+import {
+  Users,
+  Search,
+  RefreshCw,
+  Eye,
+  Lock,
+  Unlock,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Phone,
+  Mail,
+  Calendar,
+  ShieldCheck,
+  MapPin,
+  ShoppingBag,
+  Utensils,
+  DollarSign,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { adminUsersApi, AdminUserItem } from "@/features/admin-users/api/admin-users.api";
+import {
+  adminUsersApi,
+  AdminUserItem,
+  CustomerDetail360,
+} from "@/features/admin-users/api/admin-users.api";
+import { formatVND } from "@/lib/utils/currency";
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<AdminUserItem[]>([]);
@@ -13,6 +36,8 @@ export default function AdminCustomersPage() {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "LOCKED">("ALL");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<AdminUserItem | null>(null);
+  const [customer360, setCustomer360] = useState<CustomerDetail360 | null>(null);
+  const [isLoading360, setIsLoading360] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const showToast = (type: "success" | "error", text: string) => {
@@ -64,6 +89,20 @@ export default function AdminCustomersPage() {
     } catch (err: any) {
       console.error("Failed to update customer status:", err);
       showToast("error", err?.message || "Không thể cập nhật trạng thái khách hàng.");
+    }
+  };
+
+  const handleOpenCustomer360 = async (c: AdminUserItem) => {
+    setSelectedCustomer(c);
+    setIsLoading360(true);
+    setCustomer360(null);
+    try {
+      const detail = await adminUsersApi.getCustomerDetail(c.id);
+      setCustomer360(detail);
+    } catch (err: any) {
+      console.error("Failed to load customer 360:", err);
+    } finally {
+      setIsLoading360(false);
     }
   };
 
@@ -215,9 +254,9 @@ export default function AdminCustomersPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
-                            onClick={() => setSelectedCustomer(c)}
+                            onClick={() => handleOpenCustomer360(c)}
                             className="p-1.5 text-ink-muted hover:text-brand-red rounded-lg hover:bg-surface border border-transparent hover:border-border transition-colors"
-                            title="Xem chi tiết"
+                            title="Xem chi tiết hồ sơ 360°"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -248,18 +287,21 @@ export default function AdminCustomersPage() {
         </div>
       </div>
 
-      {/* Modal Chi Tiết Khách Hàng */}
+      {/* Modal Chi Tiết Khách Hàng 360° */}
       {selectedCustomer && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-surface border border-border rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-brand-red" />
-                <h3 className="font-bold text-base text-ink">Hồ Sơ Khách Hàng</h3>
+                <h3 className="font-bold text-base text-ink">Hồ Sơ Khách Hàng 360°</h3>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedCustomer(null)}
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setCustomer360(null);
+                }}
                 className="p-1 text-ink-muted hover:text-ink rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -282,37 +324,134 @@ export default function AdminCustomersPage() {
                 </div>
               </div>
 
-              <div className="space-y-2.5 text-xs">
+              {/* Thông tin cơ bản */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border">
-                  <span className="text-ink-muted flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-turmeric" /> Email:
+                  <span className="text-ink-muted flex items-center gap-1.5 truncate">
+                    <Mail className="w-3.5 h-3.5 text-turmeric shrink-0" /> Email:
                   </span>
-                  <span className="font-mono font-semibold text-ink">{selectedCustomer.email}</span>
+                  <span className="font-mono font-semibold text-ink truncate ml-2">{selectedCustomer.email}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border">
-                  <span className="text-ink-muted flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-brand-red" /> Số điện thoại:
+                  <span className="text-ink-muted flex items-center gap-1.5 shrink-0">
+                    <Phone className="w-3.5 h-3.5 text-brand-red shrink-0" /> SĐT:
                   </span>
                   <span className="font-mono font-semibold text-ink">{selectedCustomer.phone || "Chưa cập nhật"}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border">
-                  <span className="text-ink-muted flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-emerald-600" /> Ngày đăng ký:
+                  <span className="text-ink-muted flex items-center gap-1.5 shrink-0">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Đăng ký:
                   </span>
                   <span className="font-semibold text-ink">
-                    {new Date(selectedCustomer.created_at).toLocaleString("vi-VN")}
+                    {new Date(selectedCustomer.created_at).toLocaleDateString("vi-VN")}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border">
-                  <span className="text-ink-muted flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-sky-600" /> Quyền truy cập:
+                  <span className="text-ink-muted flex items-center gap-1.5 shrink-0">
+                    <ShieldCheck className="w-3.5 h-3.5 text-sky-600 shrink-0" /> Vai trò:
                   </span>
                   <span className="font-semibold text-ink">{selectedCustomer.role}</span>
                 </div>
               </div>
+
+              {/* Thống kê chi tiêu trọn đời (LTV) */}
+              {isLoading360 && (
+                <div className="p-4 text-center text-xs text-ink-muted flex items-center justify-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-brand-red" />
+                  <span>Đang tải số liệu chi tiêu và lịch sử...</span>
+                </div>
+              )}
+
+              {customer360 && (
+                <div className="space-y-3 pt-1">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-cream/70 border border-turmeric/40 rounded-xl">
+                      <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                        <DollarSign className="w-3.5 h-3.5 text-brand-red" />
+                        <span>Tổng chi tiêu trọn đời</span>
+                      </div>
+                      <div className="font-bold text-base font-mono text-brand-red mt-1">
+                        {formatVND(customer360.statistics.lifetime_spend)}
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-surface-hover/70 border border-border rounded-xl">
+                      <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                        <ShoppingBag className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Số đơn hàng đã tạo</span>
+                      </div>
+                      <div className="font-bold text-base text-ink mt-1">
+                        {customer360.statistics.completed_orders_count} hoàn tất{" "}
+                        <span className="text-xs text-ink-muted font-normal">
+                          / {customer360.statistics.total_orders_count} đơn
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sổ địa chỉ */}
+                  {customer360.addresses.length > 0 && (
+                    <div className="p-3 bg-surface rounded-xl border border-border space-y-2">
+                      <div className="text-xs font-bold text-ink flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-brand-red" />
+                        <span>Sổ địa chỉ nhận hàng ({customer360.addresses.length})</span>
+                      </div>
+                      <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+                        {customer360.addresses.map((a) => (
+                          <div
+                            key={a.id}
+                            className="text-[11px] p-2 bg-surface-hover/50 rounded-lg flex items-start justify-between gap-2"
+                          >
+                            <div>
+                              <span className="font-bold text-ink">{a.recipient_name}</span>{" "}
+                              <span className="text-ink-muted">({a.phone})</span>
+                              <p className="text-ink-muted mt-0.5">{a.address_line}</p>
+                            </div>
+                            {a.is_default && (
+                              <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-semibold shrink-0">
+                                Mặc định
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Khẩu vị ưa thích */}
+                  {customer360.preferences && (
+                    <div className="p-3 bg-surface rounded-xl border border-border space-y-1.5 text-xs">
+                      <div className="font-bold text-ink flex items-center gap-1.5">
+                        <Utensils className="w-3.5 h-3.5 text-turmeric" />
+                        <span>Khẩu vị &amp; Ghi chú kiêng cữ</span>
+                      </div>
+                      <div className="text-[11px] text-ink-muted space-y-1">
+                        {customer360.preferences.dietary_note && (
+                          <p>
+                            <span className="font-medium text-ink">Ghi chú:</span>{" "}
+                            {customer360.preferences.dietary_note}
+                          </p>
+                        )}
+                        {customer360.preferences.tag_preferences.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {customer360.preferences.tag_preferences.map((tp) => (
+                              <span
+                                key={tp.tag_id}
+                                className="px-2 py-0.5 bg-surface-hover text-ink rounded-full text-[10px]"
+                              >
+                                {tp.preference === "LIKE" ? "❤️" : "🚫"} {tp.tag_name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
@@ -331,7 +470,14 @@ export default function AdminCustomersPage() {
                   </>
                 )}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setSelectedCustomer(null)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setCustomer360(null);
+                }}
+              >
                 Đóng
               </Button>
             </div>

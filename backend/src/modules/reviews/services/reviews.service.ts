@@ -38,6 +38,7 @@ export class ReviewsService {
       variant_name: r.order_items?.variant_name || null,
       rating: r.rating,
       content: r.content,
+      images: Array.isArray(r.images) ? r.images : [],
       author_display_name: this.maskCustomerName(rawName),
       reply: r.reply,
       replied_at: r.replied_at,
@@ -52,6 +53,7 @@ export class ReviewsService {
       order_item_id: r.order_item_id.toString(),
       rating: r.rating,
       content: r.content,
+      images: Array.isArray(r.images) ? r.images : [],
       visibility: r.visibility,
       moderation_reason: r.moderation_reason,
       reply: r.reply,
@@ -121,12 +123,14 @@ export class ReviewsService {
       update: {
         rating: dto.rating,
         content: dto.content !== undefined ? dto.content : null,
+        images: dto.images !== undefined ? dto.images : undefined,
         visibility: reviews_visibility.VISIBLE,
       },
       create: {
         order_item_id: oiId,
         rating: dto.rating,
         content: dto.content || null,
+        images: dto.images || [],
         visibility: reviews_visibility.VISIBLE,
       },
       include: {

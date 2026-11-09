@@ -16,10 +16,14 @@ import {
   Prisma,
 } from '@prisma/client';
 import { isOrderTransitionAllowed } from '../domain/order-transition.policy.js';
+import { EventsService } from '../../events/events.service.js';
 
 @Injectable()
 export class OrderStateMachineService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   // Cập nhật trạng thái theo Máy trạng thái 9 bước (BR-22, BR-12)
   async transitionStatus(
@@ -58,6 +62,8 @@ export class OrderStateMachineService {
         `Không thể chuyển trạng thái từ "${currentStatus}" sang "${nextStatus}".`,
       );
     }
+
+    let finalPaymentStatus: string = order.payment_status;
 
     await this.prisma.$transaction(async (tx) => {
       const updateData: Prisma.ordersUpdateInput = {
@@ -129,6 +135,10 @@ export class OrderStateMachineService {
         }
       }
 
+      if (updateData.payment_status) {
+        finalPaymentStatus = updateData.payment_status as string;
+      }
+
       // Cập nhật trạng thái kèm điều kiện lạc quan (Optimistic Concurrency - Issue 5)
       const updateResult = await tx.orders.updateMany({
         where: {
@@ -155,6 +165,16 @@ export class OrderStateMachineService {
           note: dto.note || null,
         },
       });
+    });
+
+    // Phát sự kiện SSE thời gian thực sau khi transaction commit thành công (API-54)
+    this.eventsService.emitOrderUpdated({
+      orderId: order.id.toString(),
+      orderCode: order.order_code,
+      status: nextStatus,
+      paymentStatus: finalPaymentStatus,
+      userId: order.user_id.toString(),
+      updatedAt: new Date().toISOString(),
     });
   }
 }

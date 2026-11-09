@@ -16,6 +16,7 @@ import { OrderMapper } from '../application/mappers/order.mapper.js';
 import { calculateCouponDiscount } from '../../promotions/domain/coupon-discount.policy.js';
 import { StoreSettingsQueryService } from '../infrastructure/persistence/store-settings-query.service.js';
 import { OrderExpirationService } from './order-expiration.service.js';
+import { EventsService } from '../../events/events.service.js';
 import {
   orders_status,
   orders_fulfillment_type,
@@ -58,6 +59,7 @@ export class OrdersService {
     private readonly config: ConfigService,
     private readonly storeSettings: StoreSettingsQueryService,
     private readonly orderExpiration: OrderExpirationService,
+    private readonly eventsService: EventsService,
   ) {}
 
   private generateOrderCode(): string {
@@ -467,6 +469,17 @@ export class OrdersService {
       }
     }
 
+    if (createdOrder) {
+      this.eventsService.emitOrderUpdated({
+        orderId: createdOrder.id.toString(),
+        orderCode: createdOrder.order_code,
+        status: createdOrder.status,
+        paymentStatus: createdOrder.payment_status,
+        userId: createdOrder.user_id.toString(),
+        updatedAt: createdOrder.created_at.toISOString(),
+      });
+    }
+
     return this.serializeOrder(createdOrder);
   }
 
@@ -493,7 +506,7 @@ export class OrdersService {
         orderBy: { created_at: 'desc' },
         include: {
           order_items: {
-            include: { order_item_options: true },
+            include: { order_item_options: true, reviews: true },
           },
           order_events: {
             orderBy: { created_at: 'asc' },
@@ -530,7 +543,7 @@ export class OrdersService {
         : { order_code: orderId },
       include: {
         order_items: {
-          include: { order_item_options: true },
+          include: { order_item_options: true, reviews: true },
         },
         order_events: {
           orderBy: { created_at: 'asc' },
@@ -553,7 +566,7 @@ export class OrdersService {
         where: { id: order.id },
         include: {
           order_items: {
-            include: { order_item_options: true },
+            include: { order_item_options: true, reviews: true },
           },
           order_events: {
             orderBy: { created_at: 'asc' },
@@ -776,7 +789,7 @@ export class OrdersService {
         orderBy: { created_at: 'desc' },
         include: {
           order_items: {
-            include: { order_item_options: true },
+            include: { order_item_options: true, reviews: true },
           },
           order_events: {
             orderBy: { created_at: 'asc' },

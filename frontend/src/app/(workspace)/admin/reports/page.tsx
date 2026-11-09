@@ -5,7 +5,7 @@ import { AdminHeader } from "@/components/layout/admin-header";
 import { Calendar, RefreshCw, BarChart2, PieChart, ShoppingBag, CheckCircle2, DollarSign, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatVND } from "@/lib/utils/currency";
-import { ordersApi, Order } from "@/features/orders/api/orders.api";
+import { reportsApi } from "@/features/reports/api/reports.api";
 
 interface BestSeller {
   name: string;
@@ -21,7 +21,7 @@ interface DailyRevenue {
 }
 
 export default function AdminReportsPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [totalOrdersCount, setTotalOrdersCount] = useState<number>(0);
   const [totalRevenue, setTotalRevenue] = useState<number>(0);
   const [completedOrdersCount, setCompletedOrdersCount] = useState<number>(0);
   const [averageOrderValue, setAverageOrderValue] = useState<number>(0);
@@ -34,81 +34,35 @@ export default function AdminReportsPage() {
   const loadReportData = async () => {
     setIsLoading(true);
     try {
-      const res = await ordersApi.adminFindAll({ limit: 500 });
-      const orderList = res.items || [];
-      setOrders(orderList);
+      const [summaryRes, topDishesRes] = await Promise.all([
+        reportsApi.getSummary(),
+        reportsApi.getTopDishes({ limit: 10 }),
+      ]);
 
-      const completed = orderList.filter(
-        (o) => o.status === "COMPLETED" || o.payment_status === "PAID"
-      );
-      setCompletedOrdersCount(completed.length);
-
-      const rev = completed.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-      setTotalRevenue(rev);
-
-      const aov = completed.length > 0 ? Math.round(rev / completed.length) : 0;
-      setAverageOrderValue(aov);
-
-      // Thống kê phương thức thanh toán
-      let vnpay = 0;
-      let cod = 0;
-      orderList.forEach((o) => {
-        if (o.payment_method === "VNPAY") vnpay++;
-        else cod++;
-      });
-      setVnpayCount(vnpay);
-      setCodCount(cod);
-
-      // Phân tích doanh thu 7 ngày gần nhất
-      const daysMap = new Map<string, { revenue: number; count: number }>();
-      const now = new Date();
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(now);
-        d.setDate(d.getDate() - i);
-        const dateKey = d.toISOString().split("T")[0];
-        daysMap.set(dateKey, { revenue: 0, count: 0 });
-      }
-
-      completed.forEach((o) => {
-        const orderDate = new Date(o.created_at).toISOString().split("T")[0];
-        if (daysMap.has(orderDate)) {
-          const cur = daysMap.get(orderDate)!;
-          cur.revenue += Number(o.total_amount || 0);
-          cur.count += 1;
-        }
-      });
+      setTotalOrdersCount(summaryRes.orders.total);
+      setTotalRevenue(summaryRes.financial.total_revenue);
+      setCompletedOrdersCount(summaryRes.orders.completed);
+      setAverageOrderValue(summaryRes.financial.average_order_value);
+      setVnpayCount(summaryRes.payment_methods.vnpay.count);
+      setCodCount(summaryRes.payment_methods.cod.count);
 
       const dayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-      const chartData: DailyRevenue[] = Array.from(daysMap.entries()).map(([dateStr, data]) => {
-        const d = new Date(dateStr);
+      const chartData: DailyRevenue[] = summaryRes.daily_revenue.map((d) => {
+        const dateObj = new Date(d.date);
         return {
-          date: dateStr,
-          dayLabel: `${dayNames[d.getDay()]} (${d.getDate()}/${d.getMonth() + 1})`,
-          revenue: data.revenue,
-          orderCount: data.count,
+          date: d.date,
+          dayLabel: `${dayNames[dateObj.getDay()]} (${dateObj.getDate()}/${dateObj.getMonth() + 1})`,
+          revenue: d.revenue,
+          orderCount: d.order_count,
         };
       });
-      setDailyData(chartData);
+      setDailyData(chartData.slice(-7));
 
-      // Xếp hạng món bán chạy
-      const dishMap = new Map<string, { sold: number; revenue: number }>();
-      for (const ord of completed) {
-        if (ord.items && Array.isArray(ord.items)) {
-          for (const it of ord.items) {
-            const key = it.dish_name || "Món ăn";
-            const cur = dishMap.get(key) || { sold: 0, revenue: 0 };
-            cur.sold += Number(it.quantity || 1);
-            cur.revenue += Number(it.subtotal || (it.unit_price || 0) * (it.quantity || 1) || 0);
-            dishMap.set(key, cur);
-          }
-        }
-      }
-
-      const topList: BestSeller[] = Array.from(dishMap.entries())
-        .map(([name, data]) => ({ name, sold: data.sold, revenue: data.revenue }))
-        .sort((a, b) => b.sold - a.sold)
-        .slice(0, 5);
-
+      const topList: BestSeller[] = topDishesRes.items.map((d) => ({
+        name: d.name,
+        sold: d.totalSold,
+        revenue: d.revenue,
+      }));
       setBestSellers(topList);
     } catch (err) {
       console.error("Failed to load report data:", err);
@@ -162,7 +116,7 @@ export default function AdminReportsPage() {
               </h3>
               <span className="text-xs text-emerald-600 font-semibold mt-1 inline-block">
                 Tỷ lệ hoàn thành:{" "}
-                {orders.length > 0 ? Math.round((completedOrdersCount / orders.length) * 100) : 100}%
+                {totalOrdersCount > 0 ? Math.round((completedOrdersCount / totalOrdersCount) * 100) : 100}%
               </span>
             </div>
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
@@ -303,7 +257,7 @@ export default function AdminReportsPage() {
                   <div className="w-full bg-border h-2 rounded-full overflow-hidden">
                     <div
                       style={{
-                        width: `${orders.length > 0 ? (vnpayCount / orders.length) * 100 : 50}%`,
+                        width: `${totalOrdersCount > 0 ? (vnpayCount / totalOrdersCount) * 100 : 50}%`,
                       }}
                       className="bg-brand-red h-full rounded-full"
                     />
@@ -318,7 +272,7 @@ export default function AdminReportsPage() {
                   <div className="w-full bg-border h-2 rounded-full overflow-hidden">
                     <div
                       style={{
-                        width: `${orders.length > 0 ? (codCount / orders.length) * 100 : 50}%`,
+                        width: `${totalOrdersCount > 0 ? (codCount / totalOrdersCount) * 100 : 50}%`,
                       }}
                       className="bg-emerald-600 h-full rounded-full"
                     />

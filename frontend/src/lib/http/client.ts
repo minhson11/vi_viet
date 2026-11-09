@@ -191,14 +191,11 @@ class HttpClient {
         headers,
       });
 
-      // Xử lý 401 Unauthorized: Thử tự động refresh token nếu chưa từng retry
-      if (
-        response.status === 401 &&
-        !_retry &&
-        !path.includes("/auth/login") &&
-        !path.includes("/auth/refresh") &&
-        !path.includes("/auth/register")
-      ) {
+      // Xử lý 401 Unauthorized: Thử tự động refresh token nếu chưa từng retry (loại trừ các endpoint xác thực)
+      const isAuthPath = ["/auth/login", "/auth/refresh", "/auth/register", "/auth/firebase"].some((p) =>
+        path.includes(p)
+      );
+      if (response.status === 401 && !_retry && !isAuthPath) {
         const newAccessToken = await this.refreshTokens();
         if (newAccessToken) {
           // Retry lại request ban đầu với token mới

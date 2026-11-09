@@ -250,68 +250,72 @@ export class CartService {
       }
     }
 
-    // 4. Kiểm tra dòng giỏ trùng hoàn toàn (BR-09)
-    const existingItems = await this.prisma.cart_items.findMany({
-      where: {
-        cart_id: cart.id,
-        dish_id: dishId,
-        variant_id: variantId,
-      },
-      include: {
-        cart_item_options: true,
-      },
-    });
+    // 4. Kiểm tra và thêm/cập nhật giỏ hàng nguyên tử (Bảo vệ race condition khi click nhanh song song)
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM carts WHERE id = ${cart.id} FOR UPDATE`;
 
-    const sortedNewOptIds = optionIds.map((id) => id.toString()).sort();
-
-    const matchedItem = existingItems.find((item) => {
-      const itemNote = item.note || null;
-      if (itemNote !== note) return false;
-
-      const existingOptIds = item.cart_item_options
-        .map((o) => o.option_value_id.toString())
-        .sort();
-
-      if (existingOptIds.length !== sortedNewOptIds.length) return false;
-      return existingOptIds.every((id, idx) => id === sortedNewOptIds[idx]);
-    });
-
-    if (matchedItem) {
-      const newQty = matchedItem.quantity + quantity;
-      if (newQty > 99) {
-        throw new BadRequestException(
-          `Số lượng tối đa cho mỗi món là 99 (hiện tại trong giỏ đã có ${matchedItem.quantity}).`,
-        );
-      }
-
-      await this.prisma.cart_items.update({
-        where: { id: matchedItem.id },
-        data: { quantity: newQty },
-      });
-    } else {
-      if (quantity > 99) {
-        throw new BadRequestException('Số lượng tối đa cho mỗi món là 99.');
-      }
-
-      await this.prisma.cart_items.create({
-        data: {
+      const existingItems = await tx.cart_items.findMany({
+        where: {
           cart_id: cart.id,
           dish_id: dishId,
           variant_id: variantId,
-          quantity,
-          note,
-          ...(optionIds.length > 0
-            ? {
-                cart_item_options: {
-                  create: optionIds.map((optId) => ({
-                    option_value_id: optId,
-                  })),
-                },
-              }
-            : {}),
+        },
+        include: {
+          cart_item_options: true,
         },
       });
-    }
+
+      const sortedNewOptIds = optionIds.map((id) => id.toString()).sort();
+
+      const matchedItem = existingItems.find((item) => {
+        const itemNote = item.note || null;
+        if (itemNote !== note) return false;
+
+        const existingOptIds = item.cart_item_options
+          .map((o) => o.option_value_id.toString())
+          .sort();
+
+        if (existingOptIds.length !== sortedNewOptIds.length) return false;
+        return existingOptIds.every((id, idx) => id === sortedNewOptIds[idx]);
+      });
+
+      if (matchedItem) {
+        const newQty = matchedItem.quantity + quantity;
+        if (newQty > 99) {
+          throw new BadRequestException(
+            `Số lượng tối đa cho mỗi món là 99 (hiện tại trong giỏ đã có ${matchedItem.quantity}).`,
+          );
+        }
+
+        await tx.cart_items.update({
+          where: { id: matchedItem.id },
+          data: { quantity: newQty },
+        });
+      } else {
+        if (quantity > 99) {
+          throw new BadRequestException('Số lượng tối đa cho mỗi món là 99.');
+        }
+
+        await tx.cart_items.create({
+          data: {
+            cart_id: cart.id,
+            dish_id: dishId,
+            variant_id: variantId,
+            quantity,
+            note,
+            ...(optionIds.length > 0
+              ? {
+                  cart_item_options: {
+                    create: optionIds.map((optId) => ({
+                      option_value_id: optId,
+                    })),
+                  },
+                }
+              : {}),
+          },
+        });
+      }
+    });
 
     if (!returnCart) {
       return null as any;

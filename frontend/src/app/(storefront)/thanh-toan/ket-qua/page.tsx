@@ -69,7 +69,7 @@ function PaymentResultContent() {
         </h1>
         <p className="text-xs sm:text-sm text-[#5a413d] max-w-sm mx-auto leading-relaxed pt-1">
           {isSuccess
-            ? "Bếp Mẹ đã nhận đơn và đang chuẩn bị những nguyên liệu tươi ngon nhất để thắp lửa phục vụ bàn tiệc của quý khách."
+            ? "Bếp Vị Việt đã nhận đơn và đang chuẩn bị những nguyên liệu tươi ngon nhất để thắp lửa phục vụ bàn tiệc của quý khách."
             : failureMessage ||
               "Giao dịch qua cổng ngân hàng bị gián đoạn hoặc quý khách đã hủy thanh toán. Vui lòng thử lại hoặc chọn hình thức COD."}
         </p>

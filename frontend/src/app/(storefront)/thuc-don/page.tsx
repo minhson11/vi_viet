@@ -13,19 +13,26 @@ function StorefrontMenuContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
+  const searchParam = searchParams.get("search");
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCatId, setSelectedCatId] = useState<string | undefined>(
     categoryParam || undefined
   );
   const [dishes, setDishes] = useState<Dish[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParam || "");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Đồng bộ selectedCatId khi query param trên URL thay đổi
+  // Đồng bộ selectedCatId và searchParam khi query param trên URL thay đổi
   useEffect(() => {
     setSelectedCatId(categoryParam || undefined);
   }, [categoryParam]);
+
+  useEffect(() => {
+    if (searchParam !== null) {
+      setSearchTerm(searchParam);
+    }
+  }, [searchParam]);
 
   // Nạp danh sách danh mục ban đầu
   useEffect(() => {

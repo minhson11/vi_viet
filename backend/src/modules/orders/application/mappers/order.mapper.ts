@@ -6,6 +6,15 @@ export interface SerializedOrderItemOption {
   extra_price: number;
 }
 
+export interface SerializedOrderItemReview {
+  id: string;
+  rating: number;
+  content: string | null;
+  images?: string[];
+  reply: string | null;
+  created_at: Date;
+}
+
 export interface SerializedOrderItem {
   id: string;
   dish_id: string;
@@ -18,6 +27,7 @@ export interface SerializedOrderItem {
   line_total: number;
   note: string | null;
   options?: SerializedOrderItemOption[];
+  review?: SerializedOrderItemReview | null;
 }
 
 export interface SerializedOrderEvent {
@@ -122,6 +132,16 @@ export class OrderMapper {
           option_name: opt.option_name,
           extra_price: Number(opt.extra_price),
         })),
+        review: item.reviews
+          ? {
+              id: item.reviews.id.toString(),
+              rating: item.reviews.rating,
+              content: item.reviews.content,
+              images: Array.isArray(item.reviews.images) ? item.reviews.images : [],
+              reply: item.reviews.reply || null,
+              created_at: item.reviews.created_at,
+            }
+          : null,
       })),
       events: o.order_events?.map((ev: any) => ({
         id: ev.id.toString(),

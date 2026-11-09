@@ -259,7 +259,7 @@ export const HeritageStoryDishes: React.FC<HeritageStoryDishesProps> = () => {
     <div
       ref={containerRef}
       id="story"
-      className="relative w-full bg-[#fff8f6] text-[#1c1917] overflow-hidden py-20 sm:py-28"
+      className="relative w-full bg-[#fff8f6] text-[#1c1917] overflow-hidden py-20 sm:py-28 scroll-mt-20"
     >
       {/* Tiêu đề dẫn lối câu chuyện ẩm thực */}
       <div className="max-w-4xl mx-auto px-6 text-center mb-16 sm:mb-20">

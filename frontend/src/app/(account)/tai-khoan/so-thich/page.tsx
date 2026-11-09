@@ -74,7 +74,7 @@ export default function AccountPreferencesPage() {
           <span>Sở thích & Khẩu vị ẩm thực</span>
         </h1>
         <p className="text-xs text-ink-muted">
-          Bếp Mẹ sẽ ghi nhớ khẩu vị của bạn để tự động điều chỉnh gia vị và gợi ý món ăn chuẩn gu
+          Đầu bếp Vị Việt sẽ ghi nhớ khẩu vị của bạn để tự động điều chỉnh gia vị và gợi ý món ăn chuẩn gu
         </p>
       </div>
 

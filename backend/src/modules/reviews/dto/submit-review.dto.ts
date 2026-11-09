@@ -6,6 +6,8 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  IsArray,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -21,4 +23,10 @@ export class SubmitReviewDto {
   @IsString({ message: 'Nội dung nhận xét phải là chuỗi' })
   @MaxLength(2000, { message: 'Nội dung nhận xét tối đa 2000 ký tự' })
   content?: string;
+
+  @IsOptional()
+  @IsArray({ message: 'Danh sách ảnh phải là mảng chuỗi' })
+  @ArrayMaxSize(5, { message: 'Tối đa 5 ảnh cho mỗi đánh giá' })
+  @IsString({ each: true, message: 'Mỗi đường dẫn ảnh phải là chuỗi' })
+  images?: string[];
 }

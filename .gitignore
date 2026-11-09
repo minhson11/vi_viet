@@ -48,6 +48,9 @@ coverage/
 *.swp
 *.swo
 .project
+
+# Workflows (avoid PAT workflow scope restriction)
+.github/
 .classpath
 .settings/
 

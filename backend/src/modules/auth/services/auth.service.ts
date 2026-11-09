@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -14,7 +15,9 @@ import { PrismaService } from '../../../database/prisma.service.js';
 import { RegisterDto } from '../dto/register.dto.js';
 import { LoginDto } from '../dto/login.dto.js';
 import { FirebaseLoginDto } from '../dto/firebase-login.dto.js';
-import { Prisma, users } from '@prisma/client';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto.js';
+import { ResetPasswordDto } from '../dto/reset-password.dto.js';
+import { Prisma, users, account_tokens_purpose } from '@prisma/client';
 import { FirebaseIdentityService } from './firebase-identity.service.js';
 
 @Injectable()
@@ -217,12 +220,8 @@ export class AuthService {
             'Đăng nhập mạng xã hội chỉ dành cho tài khoản khách hàng.',
           );
         }
-        if (matched.firebase_uid && matched.firebase_uid !== identity.uid) {
-          throw new UnauthorizedException(
-            'Email này đã liên kết với một tài khoản mạng xã hội khác.',
-          );
-        }
-        if (!matched.firebase_uid || !matched.email_verified_at) {
+        // Nếu cùng địa chỉ email, tự động đồng bộ firebase_uid mới nhất từ provider
+        if (matched.firebase_uid !== identity.uid || !matched.email_verified_at) {
           matched = await tx.users.update({
             where: { id: matched.id },
             data: {
@@ -346,5 +345,214 @@ export class AuthService {
     }
 
     return this.toSafeUser(user);
+  }
+
+  // 6. Quên mật khẩu (API-05)
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const user = await this.prisma.users.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (user && user.status === 'ACTIVE') {
+      // Thu hồi các token RESET_PASSWORD cũ chưa dùng của user này
+      await this.prisma.account_tokens.updateMany({
+        where: {
+          user_id: user.id,
+          purpose: account_tokens_purpose.RESET_PASSWORD,
+          used_at: null,
+        },
+        data: {
+          used_at: new Date(),
+        },
+      });
+
+      // Tạo token mới 32 bytes ngẫu nhiên
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = this.hashToken(rawToken);
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 60 phút
+
+      await this.prisma.account_tokens.create({
+        data: {
+          user_id: user.id,
+          purpose: account_tokens_purpose.RESET_PASSWORD,
+          token_hash: tokenHash,
+          expires_at: expiresAt,
+        },
+      });
+
+      const frontendUrl =
+        this.configService.get<string>('FRONTEND_URL') ||
+        this.configService.get<string>('PUBLIC_APP_ORIGIN') ||
+        'http://localhost:3000';
+      const resetLink = `${frontendUrl}/dat-lai-mat-khau?token=${rawToken}`;
+      const isDev = this.configService.get<string>('NODE_ENV') !== 'production';
+      if (isDev) {
+        this.logger.log(
+          `[ForgotPassword] Reset password link generated for ${user.email}: ${resetLink}`,
+        );
+      } else {
+        this.logger.log(
+          `[ForgotPassword] Reset password token generated successfully for ${user.email}`,
+        );
+      }
+    }
+
+    // Luôn trả thông báo chung để chống timing attack / email enumeration
+    return {
+      message:
+        'Nếu địa chỉ email tồn tại trong hệ thống, hướng dẫn khôi phục mật khẩu sẽ được gửi đến hộp thư của bạn.',
+    };
+  }
+
+  // 7. Đặt lại mật khẩu mới (API-06)
+  async resetPassword(dto: ResetPasswordDto) {
+    const tokenHash = this.hashToken(dto.token);
+    const now = new Date();
+
+    const tokenRecord = await this.prisma.account_tokens.findFirst({
+      where: {
+        token_hash: tokenHash,
+        purpose: account_tokens_purpose.RESET_PASSWORD,
+        used_at: null,
+        expires_at: { gt: now },
+      },
+      include: { users: true },
+    });
+
+    if (!tokenRecord) {
+      throw new BadRequestException(
+        'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
+      );
+    }
+
+    const newPasswordHash = await argon2.hash(dto.new_password);
+
+    await this.prisma.$transaction(async (tx) => {
+      // Cập nhật mật khẩu mới
+      await tx.users.update({
+        where: { id: tokenRecord.user_id },
+        data: { password_hash: newPasswordHash },
+      });
+
+      // Đánh dấu token đã được sử dụng
+      await tx.account_tokens.update({
+        where: { id: tokenRecord.id },
+        data: { used_at: now },
+      });
+
+      // Thu hồi tất cả các phiên đăng nhập đang hoạt động của user
+      await tx.auth_sessions.updateMany({
+        where: {
+          user_id: tokenRecord.user_id,
+          revoked_at: null,
+        },
+        data: {
+          revoked_at: now,
+        },
+      });
+    });
+
+    return {
+      message: 'Mật khẩu đã được cập nhật thành công. Vui lòng đăng nhập lại.',
+    };
+  }
+
+  // 8. Xác minh email (API-07)
+  async verifyEmail(token: string) {
+    const tokenHash = this.hashToken(token);
+    const now = new Date();
+
+    const tokenRecord = await this.prisma.account_tokens.findFirst({
+      where: {
+        token_hash: tokenHash,
+        purpose: account_tokens_purpose.VERIFY_EMAIL,
+        used_at: null,
+        expires_at: { gt: now },
+      },
+    });
+
+    if (!tokenRecord) {
+      throw new BadRequestException(
+        'Mã xác thực email không hợp lệ hoặc đã hết hạn.',
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.users.update({
+        where: { id: tokenRecord.user_id },
+        data: { email_verified_at: now },
+      });
+
+      await tx.account_tokens.update({
+        where: { id: tokenRecord.id },
+        data: { used_at: now },
+      });
+    });
+
+    return {
+      message: 'Email đã được xác thực thành công.',
+    };
+  }
+
+  // 9. Gửi lại mã xác minh email (API-08)
+  async resendVerification(userId: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { id: BigInt(userId) },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng.');
+    }
+
+    if (user.email_verified_at) {
+      return {
+        already_verified: true,
+        message: 'Tài khoản của bạn đã được xác minh trước đó.',
+      };
+    }
+
+    // Thu hồi các token verify cũ chưa dùng
+    await this.prisma.account_tokens.updateMany({
+      where: {
+        user_id: user.id,
+        purpose: account_tokens_purpose.VERIFY_EMAIL,
+        used_at: null,
+      },
+      data: { used_at: new Date() },
+    });
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = this.hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 giờ
+
+    await this.prisma.account_tokens.create({
+      data: {
+        user_id: user.id,
+        purpose: account_tokens_purpose.VERIFY_EMAIL,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+      },
+    });
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') ||
+      this.configService.get<string>('PUBLIC_APP_ORIGIN') ||
+      'http://localhost:3000';
+    const verifyLink = `${frontendUrl}/xac-minh-email?token=${rawToken}`;
+    const isDev = this.configService.get<string>('NODE_ENV') !== 'production';
+    if (isDev) {
+      this.logger.log(
+        `[VerifyEmail] Email verification link generated for ${user.email}: ${verifyLink}`,
+      );
+    } else {
+      this.logger.log(
+        `[VerifyEmail] Email verification token generated successfully for ${user.email}`,
+      );
+    }
+
+    return {
+      message: 'Đã tạo liên kết xác minh email mới và gửi tới bạn.',
+    };
   }
 }

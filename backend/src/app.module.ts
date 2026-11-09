@@ -17,6 +17,9 @@ import { RolesGuard } from './common/guards/roles.guard.js';
 import { validateEnvironment } from './config/environment.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { StoreModule } from './modules/store/store.module.js';
+import { AiModule } from './modules/ai/ai.module.js';
+import { ReportsModule } from './modules/reports/reports.module.js';
+import { EventsModule } from './modules/events/events.module.js';
 import { RateLimitGuard } from './common/rate-limit/rate-limit.guard.js';
 
 @Module({
@@ -38,6 +41,9 @@ import { RateLimitGuard } from './common/rate-limit/rate-limit.guard.js';
     StoryModule,
     HealthModule,
     StoreModule,
+    AiModule,
+    ReportsModule,
+    EventsModule,
   ],
   controllers: [],
   providers: [

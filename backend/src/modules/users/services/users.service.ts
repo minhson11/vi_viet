@@ -391,4 +391,150 @@ export class UsersService {
 
     return this.serializeUser(user);
   }
+
+  // 10. Chân dung khách hàng 360 độ (API-70)
+  async adminGetCustomerDetail(customerId: string) {
+    const uId = BigInt(customerId);
+    const user = await this.prisma.users.findUnique({
+      where: { id: uId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy khách hàng.');
+    }
+
+    // Thống kê lịch sử đơn hàng trọn đời
+    const totalOrdersCount = await this.prisma.orders.count({
+      where: { user_id: uId },
+    });
+
+    const completedOrders = await this.prisma.orders.findMany({
+      where: {
+        user_id: uId,
+        OR: [{ status: 'COMPLETED' }, { payment_status: 'PAID' }],
+      },
+      select: {
+        total_amount: true,
+        created_at: true,
+      },
+      orderBy: { created_at: 'asc' },
+    });
+
+    const lifetimeSpend = completedOrders.reduce(
+      (sum, ord) => sum + Number(ord.total_amount || 0),
+      0,
+    );
+    const firstOrderAt = completedOrders[0]?.created_at || null;
+    const lastOrderAt =
+      completedOrders[completedOrders.length - 1]?.created_at || null;
+
+    // Lấy sổ địa chỉ còn hiệu lực
+    const addressList = await this.prisma.addresses.findMany({
+      where: { user_id: uId, deleted_at: null },
+      orderBy: [{ is_default: 'desc' }, { created_at: 'desc' }],
+    });
+
+    // Lấy sở thích khẩu vị
+    const [preferences, tagPrefs, ingredientRestrs] = await Promise.all([
+      this.prisma.user_preferences.findUnique({
+        where: { user_id: uId },
+      }),
+      this.prisma.user_tag_preferences.findMany({
+        where: { user_id: uId },
+        include: { tags: true },
+      }),
+      this.prisma.user_ingredient_restrictions.findMany({
+        where: { user_id: uId },
+        include: { ingredients: true },
+      }),
+    ]);
+
+    return {
+      customer: this.serializeUser(user),
+      statistics: {
+        total_orders_count: totalOrdersCount,
+        completed_orders_count: completedOrders.length,
+        lifetime_spend: lifetimeSpend,
+        first_order_at: firstOrderAt,
+        last_order_at: lastOrderAt,
+      },
+      addresses: addressList.map((a) => ({
+        id: a.id.toString(),
+        recipient_name: a.recipient_name,
+        phone: a.phone,
+        address_line: a.address_line,
+        delivery_note: a.delivery_note,
+        is_default: a.is_default,
+        created_at: a.created_at,
+      })),
+      preferences: preferences
+        ? {
+            spicy_level: preferences.spicy_level,
+            budget_per_meal: Number(preferences.budget_per_meal || 0),
+            dietary_note: preferences.dietary_note,
+            tag_preferences: tagPrefs.map((tp) => ({
+              tag_id: tp.tag_id.toString(),
+              tag_name: tp.tags?.name || '',
+              preference: tp.preference,
+            })),
+            ingredient_restrictions: ingredientRestrs.map((ir) => ({
+              ingredient_id: ir.ingredient_id.toString(),
+              ingredient_name: ir.ingredients?.name || '',
+              reason: ir.reason,
+            })),
+          }
+        : null,
+    };
+  }
+
+  // 11. Danh sách đơn hàng của khách hàng (API-71)
+  async adminGetCustomerOrders(
+    customerId: string,
+    query: { page?: number; limit?: number; status?: string },
+  ) {
+    const uId = BigInt(customerId);
+    const page = Math.max(1, query.page || 1);
+    const limit = Math.max(1, Math.min(100, query.limit || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = { user_id: uId };
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    const [total, orders] = await Promise.all([
+      this.prisma.orders.count({ where }),
+      this.prisma.orders.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { created_at: 'desc' },
+        include: {
+          order_items: true,
+        },
+      }),
+    ]);
+
+    return {
+      items: orders.map((o) => ({
+        id: o.id.toString(),
+        order_code: o.order_code,
+        status: o.status,
+        payment_status: o.payment_status,
+        payment_method: o.payment_method,
+        fulfillment_type: o.fulfillment_type,
+        total_amount: Number(o.total_amount),
+        delivery_fee: Number(o.delivery_fee),
+        items_count: o.order_items.length,
+        created_at: o.created_at,
+        completed_at: o.completed_at,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        total_pages: Math.ceil(total / limit),
+      },
+    };
+  }
 }

@@ -53,23 +53,37 @@ export function SocialAuthButtons({
         rememberMe,
       );
       router.push(redirectTarget || '/tai-khoan');
-    } catch (caught) {
+    } catch (caught: unknown) {
+      console.error(`[SocialAuth] Đăng nhập ${providerName} thất bại:`, caught);
       const code =
         typeof caught === 'object' && caught && 'code' in caught
-          ? String(caught.code)
+          ? String((caught as { code?: unknown }).code)
           : '';
+
       if (
         code === 'auth/popup-closed-by-user' ||
         code === 'auth/cancelled-popup-request'
       ) {
         return;
       }
-      if (code === 'auth/account-exists-with-different-credential') {
+
+      if (code === 'auth/operation-not-allowed') {
         setError(
-          'Email này đã dùng phương thức đăng nhập khác. Hãy đăng nhập bằng phương thức cũ trước.',
+          `Phương thức đăng nhập ${providerName === 'google' ? 'Google' : 'Facebook'} chưa được bật trong Firebase Console (Authentication > Sign-in method).`,
         );
       } else if (code === 'auth/unauthorized-domain') {
-        setError('Tên miền hiện tại chưa được cho phép trong Firebase.');
+        const host = typeof window !== 'undefined' ? window.location.hostname : 'hiện tại';
+        setError(
+          `Tên miền (${host}) chưa được cấu hình trong Authorized Domains của Firebase Console. Vui lòng truy cập qua http://localhost:3000 hoặc thêm "${host}" vào Firebase.`,
+        );
+      } else if (code === 'auth/popup-blocked') {
+        setError(
+          'Trình duyệt đã chặn cửa sổ đăng nhập pop-up. Vui lòng cho phép mở pop-up và thử lại.',
+        );
+      } else if (code === 'auth/account-exists-with-different-credential') {
+        setError(
+          'Email này đã được sử dụng với phương thức đăng nhập khác. Vui lòng đăng nhập bằng phương thức cũ trước.',
+        );
       } else {
         setError(
           caught instanceof Error

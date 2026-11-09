@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Bell, Store, ShieldCheck, LogOut } from "lucide-react";
+import { Bell, Store, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/features/auth/context/auth-context";
 
 interface AdminHeaderProps {
@@ -11,7 +11,7 @@ interface AdminHeaderProps {
 }
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle, action }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const displayName = user?.full_name || user?.email?.split("@")[0] || "Quản trị viên";
   const userInitials = displayName.substring(0, 2).toUpperCase();
@@ -53,14 +53,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ title, subtitle, actio
             </span>
             <span className="text-[10px] text-ink-muted">{user?.role || "ADMIN"}</span>
           </div>
-
-          <button
-            onClick={logout}
-            title="Đăng xuất"
-            className="p-1.5 text-ink-muted hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors ml-1"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
     </header>

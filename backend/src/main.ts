@@ -15,8 +15,12 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const express = app.getHttpAdapter().getInstance();
-  const trustProxy = config.get<string>('TRUST_PROXY');
-  if (trustProxy) express.set('trust proxy', trustProxy);
+  const trustProxy = config.get<string>('TRUST_PROXY', 'true');
+  if (trustProxy === 'true' || trustProxy === '1') {
+    express.set('trust proxy', true);
+  } else if (trustProxy && trustProxy !== 'false' && trustProxy !== '0') {
+    express.set('trust proxy', trustProxy);
+  }
 
   app.use(json({ limit: '2mb' }));
   app.use(urlencoded({ limit: '2mb', extended: true }));
@@ -31,7 +35,7 @@ async function bootstrap() {
     response.setHeader('x-content-type-options', 'nosniff');
     response.setHeader('x-frame-options', 'DENY');
     response.setHeader('referrer-policy', 'no-referrer');
-    response.setHeader('cross-origin-opener-policy', 'same-origin');
+    response.setHeader('cross-origin-opener-policy', 'same-origin-allow-popups');
 
     const start = Date.now();
     response.on('finish', () => {

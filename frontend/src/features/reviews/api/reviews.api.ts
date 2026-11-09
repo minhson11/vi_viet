@@ -12,6 +12,7 @@ export interface ReviewItem {
   rating: number;
   content?: string;
   comment?: string;
+  images?: string[];
   visibility: "VISIBLE" | "HIDDEN" | "FLAGGED" | string;
   status?: string;
   reply?: string;
@@ -20,6 +21,23 @@ export interface ReviewItem {
 }
 
 export const reviewsApi = {
+  async submitReview(
+    orderItemId: string,
+    dto: {
+      rating: number;
+      content?: string;
+      images?: string[];
+    }
+  ): Promise<ReviewItem> {
+    return httpClient.put<ReviewItem>(`/order-items/${orderItemId}/review`, dto);
+  },
+
+  async uploadReviewImage(file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return httpClient.post<{ url: string }>("/upload/review-image", formData);
+  },
+
   async getAdminReviews(params?: {
     visibility?: string;
     dish_id?: string;

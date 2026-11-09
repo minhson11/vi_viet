@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { AdminGuard } from "@/features/auth/components/auth-guard";
 
@@ -9,6 +10,14 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/admin/dang-nhap";
+
+  // Trang đăng nhập Admin hiển thị toàn màn hình, không bọc Sidebar hay Guard
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   return (
     <AdminGuard>
       <div className="min-h-screen flex bg-background">

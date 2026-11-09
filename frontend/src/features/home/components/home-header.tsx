@@ -71,12 +71,13 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           >
             Hành Trình Di Sản
           </a>
-          <Link
-            href="/tu-van"
-            className="text-sm font-medium text-[#5a413d] hover:text-primary transition-colors"
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
+            className="text-sm font-medium text-[#5a413d] hover:text-primary transition-colors cursor-pointer"
           >
-            Tư Vấn Khẩu Vị AI
-          </Link>
+            Bếp Trưởng Tư Vấn
+          </button>
         </nav>
 
         {/* 3. Action Tools: Tìm kiếm, Tài khoản, Giỏ hàng */}
@@ -235,13 +236,16 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           >
             Hành Trình Di Sản
           </a>
-          <Link
-            href="/tu-van"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-sm font-medium text-[#5a413d] hover:text-primary py-1"
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              window.dispatchEvent(new CustomEvent("open-ai-chat"));
+            }}
+            className="text-sm font-medium text-[#5a413d] hover:text-primary py-1 text-left cursor-pointer w-full"
           >
-            Tư Vấn Khẩu Vị AI
-          </Link>
+            Bếp Trưởng Tư Vấn
+          </button>
         </div>
       )}
     </header>
